@@ -111,7 +111,7 @@
         <span id="strokeCount">Çekiş Sayısı: 0</span>
     </div>
     <h2 id="status">Durum: Hazır</h2>
-    <div id="currentSpm">Geçerli SPM: 12</div>
+    <div id="currentSpm">Geçerli SPM: 10</div>
 
     <script>
         const startButton = document.getElementById('startButton');
@@ -141,7 +141,7 @@
         let intervalId = null; // Zamanlayıcıyı güncellemek için
         let strokeCount = 0; // Toplam çekiş sayısını tutar
         let totalElapsedTime = 0; // Başlangıçtan itibaren geçen süre
-        let currentSpm = 12; // Başlangıçtaki geçerli SPM
+        let currentSpm = 10; // Başlangıçtaki geçerli SPM
 
         const stopAllSounds = () => {
             // Tüm sesleri durdur ve başa sar
@@ -156,8 +156,7 @@
         const updateValues = (trigger) => {
             let spm = currentSpm;
             if (trigger === 'spm') {
-                spm = parseFloat(spmInput.value);
-                currentSpm = 10; // Başlangıç SPM değeri 10
+                spm = currentSpm;
             }
             const ratio = ratioInput.value.split(':').map(Number);
             const driveRatio = ratio[0];
@@ -224,7 +223,14 @@
                 currentPhase = 0; // Döngü başa dönsün
                 strokeCount++; // Her tur tamamlandığında çekiş sayısını artır
                 strokeCountDisplay.textContent = `Çekiş Sayısı: ${strokeCount}`;
-                increaseSpm(); // SPM'yi artır
+
+                // SPM'yi artır ve zamanlamaları güncelle
+                const targetSpm = parseFloat(spmInput.value);
+                if (currentSpm < targetSpm) {
+                    currentSpm++;
+                    currentSpmDisplay.textContent = `Geçerli SPM: ${currentSpm}`;
+                    updateValues('spm');
+                }
             }
 
             const phase = phases[currentPhase];
