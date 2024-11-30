@@ -48,7 +48,7 @@
     <div id="settings">
         <div class="form-group">
             <label>SPM (Stroke Per Minute - Dakikadaki Çekiş):</label>
-            <input type="number" step="0.1" id="spm" placeholder="Dakikadaki Çekiş Sayısı" value="21">
+            <input type="number" step="0.1" id="spm" placeholder="Dakikadaki Çekiş Sayısı" value="22">
         </div>
         <div class="form-group">
             <label>Drive:Recovery Oranı:</label>
@@ -239,7 +239,9 @@
 
             // Başlangıç anından itibaren geçen süreyi sıfırla ve zamanlayıcıyı başlat
             totalElapsedTime = 0;
+            strokeCount = 0; // Çekiş sayısını sıfırla
             elapsedTimeDisplay.textContent = "Geçen Süre: 0 saniye";
+            strokeCountDisplay.textContent = "Çekiş Sayısı: 0";
             updateElapsedTime();
 
             // Faz sürelerini al ve fazları güncelle
