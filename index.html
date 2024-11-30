@@ -90,10 +90,10 @@
                 let driveTime = parseFloat(driveTimeInput.value) * 1000;
                 let recoveryTime = parseFloat(recoveryTimeInput.value) * 1000;
 
-                if (driveTime) {
+                if (driveTime && driveTime < totalStrokeTime) {
                     recoveryTime = totalStrokeTime - driveTime;
                     recoveryTimeInput.value = (recoveryTime / 1000).toFixed(2);
-                } else if (recoveryTime) {
+                } else if (recoveryTime && recoveryTime < totalStrokeTime) {
                     driveTime = totalStrokeTime - recoveryTime;
                     driveTimeInput.value = (driveTime / 1000).toFixed(2);
                 } else {
@@ -161,6 +161,12 @@
             const driveTime = parseFloat(document.getElementById('driveTime').value) * 1000;
             const finishTime = 500; // Finish süresi sabit 0.5 saniye (500 ms)
             const recoveryTime = parseFloat(document.getElementById('recoveryTime').value) * 1000;
+
+            // Negatif veya sıfır süre kontrolü
+            if (driveTime <= 0 || recoveryTime <= 0) {
+                alert("Geçersiz süreler girildi. Lütfen uygun bir SPM değeri ve süre girin.");
+                return;
+            }
 
             phases.length = 0; // Eski fazları temizle
             phases.push(
