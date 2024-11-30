@@ -81,6 +81,12 @@
         const elapsedTimeDisplay = document.getElementById('elapsedTime');
         const strokeCountDisplay = document.getElementById('strokeCount');
 
+        // Girdi elementlerini tanımlıyoruz
+        const spmInput = document.getElementById('spm');
+        const ratioInput = document.getElementById('ratio');
+        const driveTimeInput = document.getElementById('driveTime');
+        const recoveryTimeInput = document.getElementById('recoveryTime');
+
         // Ses dosyalarını tanımlıyoruz
         const catchAndFinishSound = new Audio('./sounds/stop.mp3');
         const driveSound = new Audio('./sounds/drive.mp3');
@@ -103,34 +109,58 @@
 
         const phases = [];
 
-        const updateDriveRecoveryValues = () => {
-            const spm = parseFloat(document.getElementById('spm').value);
-            const ratioInput = document.getElementById('ratio').value;
-            if (spm && ratioInput) {
-                const totalStrokeTime = (60 / spm) * 1000; // SPM'den bir stroğun toplam süresi (ms cinsinden)
+        const updateValues = (trigger) => {
+            const spm = parseFloat(spmInput.value);
+            const ratio = ratioInput.value.split(':').map(Number);
+            const driveRatio = ratio[0];
+            const recoveryRatio = ratio[1];
+            const totalRatio = driveRatio + recoveryRatio;
 
-                const [driveRatio, recoveryRatio] = ratioInput.split(':').map(Number);
-                const totalRatio = driveRatio + recoveryRatio;
-
+            if (trigger === 'spm' && spm && totalRatio) {
+                const totalStrokeTime = (60 / spm) * 1000;
                 const driveTime = (totalStrokeTime * driveRatio) / totalRatio;
                 const recoveryTime = (totalStrokeTime * recoveryRatio) / totalRatio;
-
-                document.getElementById('driveTime').value = (driveTime / 1000).toFixed(2);
-                document.getElementById('recoveryTime').value = (recoveryTime / 1000).toFixed(2);
+                driveTimeInput.value = (driveTime / 1000).toFixed(2);
+                recoveryTimeInput.value = (recoveryTime / 1000).toFixed(2);
+            } else if (trigger === 'ratio' && spm && totalRatio) {
+                const totalStrokeTime = (60 / spm) * 1000;
+                const driveTime = (totalStrokeTime * driveRatio) / totalRatio;
+                const recoveryTime = (totalStrokeTime * recoveryRatio) / totalRatio;
+                driveTimeInput.value = (driveTime / 1000).toFixed(2);
+                recoveryTimeInput.value = (recoveryTime / 1000).toFixed(2);
+            } else if (trigger === 'drive' && spm && totalRatio) {
+                const driveTime = parseFloat(driveTimeInput.value) * 1000;
+                const totalStrokeTime = (60 / spm) * 1000;
+                const recoveryTime = totalStrokeTime - driveTime;
+                recoveryTimeInput.value = (recoveryTime / 1000).toFixed(2);
+            } else if (trigger === 'recovery' && spm && totalRatio) {
+                const recoveryTime = parseFloat(recoveryTimeInput.value) * 1000;
+                const totalStrokeTime = (60 / spm) * 1000;
+                const driveTime = totalStrokeTime - recoveryTime;
+                driveTimeInput.value = (driveTime / 1000).toFixed(2);
             }
         };
 
-        document.getElementById('spm').addEventListener('input', () => {
-            updateDriveRecoveryValues();
+        // Girdi elemanlarına event listener ekleyerek her değişiklikte diğerlerini güncelleme
+        spmInput.addEventListener('input', () => {
+            updateValues('spm');
         });
 
-        document.getElementById('ratio').addEventListener('input', () => {
-            updateDriveRecoveryValues();
+        ratioInput.addEventListener('input', () => {
+            updateValues('ratio');
+        });
+
+        driveTimeInput.addEventListener('input', () => {
+            updateValues('drive');
+        });
+
+        recoveryTimeInput.addEventListener('input', () => {
+            updateValues('recovery');
         });
 
         // Sayfa yüklendiğinde başlangıç değerlerini hesapla
         window.addEventListener('load', () => {
-            updateDriveRecoveryValues();
+            updateValues('spm');
         });
 
         const updateElapsedTime = () => {
@@ -214,9 +244,9 @@
 
             // Faz sürelerini al ve fazları güncelle
             const catchTime = 500; // Catch süresi sabit 0.5 saniye (500 ms)
-            const driveTime = parseFloat(document.getElementById('driveTime').value) * 1000;
+            const driveTime = parseFloat(driveTimeInput.value) * 1000;
             const finishTime = 500; // Finish süresi sabit 0.5 saniye (500 ms)
-            const recoveryTime = parseFloat(document.getElementById('recoveryTime').value) * 1000;
+            const recoveryTime = parseFloat(recoveryTimeInput.value) * 1000;
 
             phases.length = 0; // Eski fazları temizle
             phases.push(
