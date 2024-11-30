@@ -64,7 +64,8 @@
         <div id="progressBar"></div>
     </div>
     <div id="timerAndStroke">
-        <span id="lastStrokeTime">Son Stroke Süresi: 0</span> | <span id="strokeCount">Çekiş Sayısı: 0</span>
+        <span id="lastStrokeTime">Son Stroke Süresi: 0 saniye</span><br>
+        <span id="elapsedTime">Geçen Süre: 0 saniye</span> | <span id="strokeCount">Çekiş Sayısı: 0</span>
     </div>
     <h2 id="status">Durum: Hazır</h2>
 
@@ -73,6 +74,7 @@
         const status = document.getElementById('status');
         const progressBar = document.getElementById('progressBar');
         const lastStrokeTimeDisplay = document.getElementById('lastStrokeTime');
+        const elapsedTimeDisplay = document.getElementById('elapsedTime');
         const strokeCountDisplay = document.getElementById('strokeCount');
 
         // Ses dosyalarını tanımlıyoruz
@@ -86,6 +88,7 @@
         let intervalId = null; // Zamanlayıcıyı güncellemek için
         let strokeCount = 0; // Toplam çekiş sayısını tutar
         let lastStrokeTime = 0; // En son stroke süresini tutar
+        let totalElapsedTime = 0; // Başlangıçtan itibaren geçen süre
 
         const stopAllSounds = () => {
             // Tüm sesleri durdur ve başa sar
@@ -145,6 +148,16 @@
         window.addEventListener('load', () => {
             updateDriveRecoveryValues();
         });
+
+        const updateElapsedTime = () => {
+            clearInterval(intervalId);
+            intervalId = setInterval(() => {
+                if (isRunning) {
+                    totalElapsedTime += 0.1;
+                    elapsedTimeDisplay.textContent = `Geçen Süre: ${totalElapsedTime.toFixed(1)} saniye`;
+                }
+            }, 100);
+        };
 
         const playPhase = () => {
             if (!isRunning) return; // Çalışma durdurulduysa devam etme
@@ -209,6 +222,11 @@
             // Metronomu başlat
             isRunning = true;
             startButton.textContent = "Durdur";
+
+            // Başlangıç anından itibaren geçen süreyi sıfırla ve zamanlayıcıyı başlat
+            totalElapsedTime = 0;
+            elapsedTimeDisplay.textContent = "Geçen Süre: 0 saniye";
+            updateElapsedTime();
 
             // Faz sürelerini al ve fazları güncelle
             const catchTime = 500; // Catch süresi sabit 0.5 saniye (500 ms)
