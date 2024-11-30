@@ -5,12 +5,13 @@
     <title>Rowing Metronome</title>
     <style>
         body {
+            background: linear-gradient(to bottom right, #4facfe, #00f2fe); /* Mavi tonları arasında geçiş */
             font-family: Arial, sans-serif;
             text-align: center;
             margin: 30px;
         }
         h1 {
-            color: #2c3e50;
+            color: #ffffff; /* Başlık rengini beyaz yaparak kontrast sağladım */
             font-size: 2.5em; /* Başlığı daha büyük yap */
         }
         .form-group {
@@ -20,6 +21,7 @@
             display: block;
             margin-bottom: 10px;
             font-size: 1.4em; /* Tüm label'ların font boyutunu aynı yap */
+            color: #ffffff; /* Label rengini beyaz yaparak arka plana uygun hale getirdim */
         }
         input[type="number"],
         input[type="text"] {
@@ -41,6 +43,10 @@
             font-weight: bold; /* Buton yazı tipi kalın yapıldı */
             margin-top: 25px;
             cursor: pointer;
+            background-color: #007bff; /* Buton rengini mavi yaptım */
+            color: #ffffff; /* Buton yazı rengini beyaz yaptım */
+            border: none;
+            border-radius: 10px; /* Butona yuvarlak kenar verdim */
         }
         #progressBarContainer {
             width: 80%; /* Ekranın %80'ini kaplasın */
@@ -61,6 +67,7 @@
         #timerAndStroke {
             font-size: 1.8em; /* Yazı boyutu büyütüldü */
             margin-top: 30px;
+            color: #ffffff; /* Geçen süre ve çekiş sayısı rengini beyaz yaptım */
         }
         #strokeCount {
             margin-top: 10px; /* Çekiş sayısı ile geçen süre arasında boşluk */
