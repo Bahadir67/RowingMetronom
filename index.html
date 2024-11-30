@@ -11,28 +11,37 @@
         }
         h1 {
             color: #2c3e50;
+            font-size: 2em; /* Başlığı daha büyük yap */
         }
         .form-group {
-            margin: 10px;
+            margin: 15px;
         }
         label {
             display: block;
-            margin-bottom: 5px;
-            font-size: 14px; /* Label font boyutu küçültüldü */
+            margin-bottom: 8px;
+            font-size: 1.2em; /* Label font boyutu büyütüldü */
+        }
+        input[type="number"],
+        input[type="text"] {
+            padding: 10px;
+            font-size: 1.2em; /* Girdi alanlarının yazı boyutu büyütüldü */
+            width: 80%;
+            max-width: 400px;
+            margin: 0 auto;
         }
         button {
-            padding: 10px 20px;
-            font-size: 16px;
+            padding: 15px 30px;
+            font-size: 1.5em; /* Buton yazı boyutu büyütüldü */
             margin-top: 20px;
             cursor: pointer;
         }
         #progressBarContainer {
-            width: 90%; /* Ekranın %90'ını kaplasın */
-            max-width: 600px; /* Maksimum genişlik ayarlandı */
-            height: 30px;
+            width: 95%; /* Ekranın %95'ini kaplasın */
+            max-width: 700px; /* Maksimum genişlik artırıldı */
+            height: 40px; /* Yüksekliği büyütüldü */
             background-color: #f3f3f3;
-            margin: 20px auto; /* Üste ve alta boşluk bırakıp ortaya hizala */
-            border-radius: 15px;
+            margin: 30px auto; /* Üste ve alta boşluk bırakıp ortaya hizala */
+            border-radius: 20px;
             overflow: hidden;
             position: relative;
         }
@@ -40,10 +49,10 @@
             height: 100%;
             width: 0%;
             position: absolute;
-            border-radius: 15px;
+            border-radius: 20px;
         }
         #timerAndStroke {
-            font-size: 1.2em;
+            font-size: 1.5em; /* Yazı boyutu büyütüldü */
             margin-top: 20px;
         }
     </style>
