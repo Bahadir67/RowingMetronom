@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rowing Metronome</title>
     <style>
         body {
@@ -57,10 +56,18 @@
         <div class="form-group">
             <label>Drive Süresi (saniye):</label>
             <input type="number" step="0.1" id="driveTime" placeholder="SPM girerseniz otomatik hesaplanır">
+            <label>Sabitle:</label>
+            <input type="checkbox" id="driveLock">
+            <label>Sesi Aç:</label>
+            <input type="checkbox" id="driveSoundEnable" checked>
         </div>
         <div class="form-group">
             <label>Recovery Süresi (saniye):</label>
             <input type="number" step="0.1" id="recoveryTime" placeholder="SPM girerseniz otomatik hesaplanır">
+            <label>Sabitle:</label>
+            <input type="checkbox" id="recoveryLock">
+            <label>Sesi Aç:</label>
+            <input type="checkbox" id="recoverySoundEnable" checked>
         </div>
         <button id="startButton">Başlat</button>
     </div>
@@ -86,6 +93,10 @@
         const ratioInput = document.getElementById('ratio');
         const driveTimeInput = document.getElementById('driveTime');
         const recoveryTimeInput = document.getElementById('recoveryTime');
+        const driveLockCheckbox = document.getElementById('driveLock');
+        const recoveryLockCheckbox = document.getElementById('recoveryLock');
+        const driveSoundEnableCheckbox = document.getElementById('driveSoundEnable');
+        const recoverySoundEnableCheckbox = document.getElementById('recoverySoundEnable');
 
         // Ses dosyalarını tanımlıyoruz
         const catchAndFinishSound = new Audio('./sounds/stop.mp3');
@@ -116,42 +127,28 @@
             const recoveryRatio = ratio[1];
             const totalRatio = driveRatio + recoveryRatio;
 
-            if (trigger === 'spm' && spm && totalRatio) {
-                const totalStrokeTime = (60 / spm) * 1000;
-                const catchAndFinishTotal = 1000; // Catch ve Finish toplam süresi 1 saniye (500 ms + 500 ms)
-                const remainingTime = totalStrokeTime - catchAndFinishTotal;
+            if (spm && totalRatio) {
+                const totalStrokeTime = (60 / spm) * 1000; // Toplam stroke süresi milisaniye cinsinden
+                const catchAndFinishTotal = 1000; // Catch ve Finish toplam süresi (1000 ms)
+                const remainingTime = totalStrokeTime - catchAndFinishTotal; // Kalan süre (Drive ve Recovery için)
 
-                const driveTime = (remainingTime * driveRatio) / totalRatio;
-                const recoveryTime = (remainingTime * recoveryRatio) / totalRatio;
-
-                driveTimeInput.value = (driveTime / 1000).toFixed(2);
-                recoveryTimeInput.value = (recoveryTime / 1000).toFixed(2);
-            } else if (trigger === 'ratio' && spm && totalRatio) {
-                const totalStrokeTime = (60 / spm) * 1000;
-                const catchAndFinishTotal = 1000;
-                const remainingTime = totalStrokeTime - catchAndFinishTotal;
-
-                const driveTime = (remainingTime * driveRatio) / totalRatio;
-                const recoveryTime = (remainingTime * recoveryRatio) / totalRatio;
-
-                driveTimeInput.value = (driveTime / 1000).toFixed(2);
-                recoveryTimeInput.value = (recoveryTime / 1000).toFixed(2);
-            } else if (trigger === 'drive' && spm && totalRatio) {
-                const driveTime = parseFloat(driveTimeInput.value) * 1000;
-                const totalStrokeTime = (60 / spm) * 1000;
-                const catchAndFinishTotal = 1000;
-                const remainingTime = totalStrokeTime - catchAndFinishTotal;
-                const recoveryTime = remainingTime - driveTime;
-
-                recoveryTimeInput.value = (recoveryTime / 1000).toFixed(2);
-            } else if (trigger === 'recovery' && spm && totalRatio) {
-                const recoveryTime = parseFloat(recoveryTimeInput.value) * 1000;
-                const totalStrokeTime = (60 / spm) * 1000;
-                const catchAndFinishTotal = 1000;
-                const remainingTime = totalStrokeTime - catchAndFinishTotal;
-                const driveTime = remainingTime - recoveryTime;
-
-                driveTimeInput.value = (driveTime / 1000).toFixed(2);
+                if (driveLockCheckbox.checked && !recoveryLockCheckbox.checked) {
+                    // Drive süresi sabit, Recovery yeniden hesaplanacak
+                    const driveTime = parseFloat(driveTimeInput.value) * 1000;
+                    const recoveryTime = remainingTime - driveTime;
+                    recoveryTimeInput.value = (recoveryTime / 1000).toFixed(2);
+                } else if (!driveLockCheckbox.checked && recoveryLockCheckbox.checked) {
+                    // Recovery süresi sabit, Drive yeniden hesaplanacak
+                    const recoveryTime = parseFloat(recoveryTimeInput.value) * 1000;
+                    const driveTime = remainingTime - recoveryTime;
+                    driveTimeInput.value = (driveTime / 1000).toFixed(2);
+                } else if (!driveLockCheckbox.checked && !recoveryLockCheckbox.checked) {
+                    // Her iki süre de sabitlenmemişse, oranlara göre yeniden hesapla
+                    const driveTime = (remainingTime * driveRatio) / totalRatio;
+                    const recoveryTime = (remainingTime * recoveryRatio) / totalRatio;
+                    driveTimeInput.value = (driveTime / 1000).toFixed(2);
+                    recoveryTimeInput.value = (recoveryTime / 1000).toFixed(2);
+                }
             }
         };
 
@@ -165,11 +162,29 @@
         });
 
         driveTimeInput.addEventListener('input', () => {
-            updateValues('drive');
+            if (!driveLockCheckbox.checked) {
+                updateValues('drive');
+            }
         });
 
         recoveryTimeInput.addEventListener('input', () => {
-            updateValues('recovery');
+            if (!recoveryLockCheckbox.checked) {
+                updateValues('recovery');
+            }
+        });
+
+        driveLockCheckbox.addEventListener('change', () => {
+            if (driveLockCheckbox.checked) {
+                recoveryLockCheckbox.checked = false; // Drive sabitlendiğinde Recovery sabitlenmesin
+            }
+            updateValues('lock');
+        });
+
+        recoveryLockCheckbox.addEventListener('change', () => {
+            if (recoveryLockCheckbox.checked) {
+                driveLockCheckbox.checked = false; // Recovery sabitlendiğinde Drive sabitlenmesin
+            }
+            updateValues('lock');
         });
 
         // Sayfa yüklendiğinde başlangıç değerlerini hesapla
@@ -201,12 +216,14 @@
 
             // Fazın sesini başlatmadan önce tüm sesleri durdur
             stopAllSounds();
-            phase.sound.play().catch((error) => console.error(`${phase.name} sesi çalınamadı:`, error));
 
-            // En son stroke süresini güncelle (Catch + Drive + Finish + Recovery)
-            if (phase.name === 'Catch') {
-                const totalStrokeTime = phases.reduce((total, p) => total + p.duration, 0);
-                lastStrokeTimeDisplay.textContent = `Son Stroke Süresi: ${(totalStrokeTime / 1000).toFixed(1)} saniye`;
+            // Drive veya Recovery sesleri checkbox durumuna göre oynatılır
+            if (phase.name === 'Drive' && driveSoundEnableCheckbox.checked) {
+                driveSound.play().catch((error) => console.error(`${phase.name} sesi çalınamadı:`, error));
+            } else if (phase.name === 'Recovery' && recoverySoundEnableCheckbox.checked) {
+                recoverySound.play().catch((error) => console.error(`${phase.name} sesi çalınamadı:`, error));
+            } else if (phase.name === 'Catch' || phase.name === 'Finish') {
+                catchAndFinishSound.play().catch((error) => console.error(`${phase.name} sesi çalınamadı:`, error));
             }
 
             // Progress bar'ı kontrol et
