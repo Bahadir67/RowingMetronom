@@ -64,7 +64,7 @@
         <div id="progressBar"></div>
     </div>
     <div id="timerAndStroke">
-        <span id="elapsedTime">Geçen Süre: 0</span> | <span id="strokeCount">Çekiş Sayısı: 0</span>
+        <span id="lastStrokeTime">Son Stroke Süresi: 0</span> | <span id="strokeCount">Çekiş Sayısı: 0</span>
     </div>
     <h2 id="status">Durum: Hazır</h2>
 
@@ -72,7 +72,7 @@
         const startButton = document.getElementById('startButton');
         const status = document.getElementById('status');
         const progressBar = document.getElementById('progressBar');
-        const elapsedTimeDisplay = document.getElementById('elapsedTime');
+        const lastStrokeTimeDisplay = document.getElementById('lastStrokeTime');
         const strokeCountDisplay = document.getElementById('strokeCount');
 
         // Ses dosyalarını tanımlıyoruz
@@ -85,7 +85,7 @@
         let timeoutId = null; // Faz zamanlayıcısını tutar
         let intervalId = null; // Zamanlayıcıyı güncellemek için
         let strokeCount = 0; // Toplam çekiş sayısını tutar
-        let totalElapsedTime = 0; // Başlangıçtan itibaren geçen süre
+        let lastStrokeTime = 0; // En son stroke süresini tutar
 
         const stopAllSounds = () => {
             // Tüm sesleri durdur ve başa sar
@@ -112,24 +112,39 @@
             }
         };
 
+        const adjustOppositePhase = (changedPhase) => {
+            const spm = parseFloat(document.getElementById('spm').value);
+            if (spm) {
+                const totalStrokeTime = (60 / spm) * 1000; // SPM'den bir stroğun toplam süresi (ms cinsinden)
+
+                if (changedPhase === 'drive') {
+                    const driveTime = parseFloat(document.getElementById('driveTime').value) * 1000;
+                    const recoveryTime = totalStrokeTime - driveTime;
+                    document.getElementById('recoveryTime').value = (recoveryTime / 1000).toFixed(2);
+                } else if (changedPhase === 'recovery') {
+                    const recoveryTime = parseFloat(document.getElementById('recoveryTime').value) * 1000;
+                    const driveTime = totalStrokeTime - recoveryTime;
+                    document.getElementById('driveTime').value = (driveTime / 1000).toFixed(2);
+                }
+            }
+        };
+
         document.getElementById('spm').addEventListener('input', () => {
             updateDriveRecoveryValues();
+        });
+
+        document.getElementById('driveTime').addEventListener('input', () => {
+            adjustOppositePhase('drive');
+        });
+
+        document.getElementById('recoveryTime').addEventListener('input', () => {
+            adjustOppositePhase('recovery');
         });
 
         // Sayfa yüklendiğinde başlangıç değerlerini hesapla
         window.addEventListener('load', () => {
             updateDriveRecoveryValues();
         });
-
-        const updateElapsedTime = () => {
-            clearInterval(intervalId);
-            intervalId = setInterval(() => {
-                if (isRunning) {
-                    totalElapsedTime += 0.1;
-                    elapsedTimeDisplay.textContent = `Geçen Süre: ${totalElapsedTime.toFixed(1)}`;
-                }
-            }, 100);
-        };
 
         const playPhase = () => {
             if (!isRunning) return; // Çalışma durdurulduysa devam etme
@@ -146,6 +161,12 @@
             // Fazın sesini başlatmadan önce tüm sesleri durdur
             stopAllSounds();
             phase.sound.play().catch((error) => console.error(`${phase.name} sesi çalınamadı:`, error));
+
+            // En son stroke süresini güncelle (Catch + Drive + Finish + Recovery)
+            if (phase.name === 'Catch') {
+                lastStrokeTime = phases.reduce((total, p) => total + p.duration, 0) / 1000;
+                lastStrokeTimeDisplay.textContent = `Son Stroke Süresi: ${lastStrokeTime.toFixed(1)} saniye`;
+            }
 
             // Progress bar'ı kontrol et
             if (phase.name === 'Drive') {
@@ -188,11 +209,6 @@
             // Metronomu başlat
             isRunning = true;
             startButton.textContent = "Durdur";
-
-            // Başlangıç anından itibaren geçen süreyi sıfırla ve zamanlayıcıyı başlat
-            totalElapsedTime = 0;
-            elapsedTimeDisplay.textContent = "Geçen Süre: 0";
-            updateElapsedTime();
 
             // Faz sürelerini al ve fazları güncelle
             const catchTime = 500; // Catch süresi sabit 0.5 saniye (500 ms)
