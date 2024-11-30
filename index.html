@@ -111,7 +111,7 @@
         <span id="strokeCount">Çekiş Sayısı: 0</span>
     </div>
     <h2 id="status">Durum: Hazır</h2>
-    <div id="currentSpm">Geçerli SPM: 10</div>
+    <div id="currentSpm" style="display: none;">Geçerli SPM: 10</div>
 
     <script>
         const startButton = document.getElementById('startButton');
@@ -214,7 +214,8 @@
             const targetSpm = parseFloat(spmInput.value);
             if (currentSpm < targetSpm) {
                 currentSpm++;
-                currentSpmDisplay.textContent = `Geçerli SPM: ${currentSpm}`;
+                currentSpmDisplay.style.display = 'block';
+            currentSpmDisplay.textContent = `Geçerli SPM: ${currentSpm}`;
             if (currentSpm < 0) currentSpm = 0;
                 updateValues('spm'); // SPM değerini güncelle ve zamanlamaları ayarla
             }
@@ -232,7 +233,10 @@
                 const targetSpm = parseFloat(spmInput.value);
                 if (currentSpm < targetSpm) {
                     currentSpm++;
-                    currentSpmDisplay.textContent = `Geçerli SPM: ${currentSpm}`;
+                currentSpmDisplay.textContent = `Geçerli SPM: ${currentSpm}`;
+                if (currentSpm >= targetSpm) {
+                    currentSpmDisplay.style.display = 'none';
+                }
                 }
                 updateValues('current'); // SPM değerini güncelle ve fazları yeniden hesapla
 
@@ -299,7 +303,8 @@
                 clearInterval(intervalId);
                 stopAllSounds();
                 isRunning = false;
-                status.textContent = "Durum: Durduruldu";
+            status.textContent = "Durum: Durduruldu";
+            currentSpmDisplay.style.display = 'none';
                 startButton.textContent = "Başlat";
                 progressBar.style.width = '0%';
                 progressBar.style.transition = 'none';
@@ -309,6 +314,7 @@
             // Metronomu başlat
             isRunning = true;
             startButton.textContent = "Durdur";
+            currentSpmDisplay.style.display = 'block';
 
             // Başlangıç anından itibaren geçen süreyi sıfırla ve zamanlayıcıyı başlat
             totalElapsedTime = 0;
