@@ -44,7 +44,7 @@
     <div id="settings">
         <div class="form-group">
             <label>SPM (Stroke Per Minute - Dakikadaki Çekiş):</label>
-            <input type="number" step="0.1" id="spm" placeholder="Dakikadaki Çekiş Sayısı" value="21">
+            <input type="number" step="0.1" id="spm" placeholder="Dakikadaki Çekiş Sayısı" value="23">
         </div>
         <div class="form-group">
             <label>Drive Süresi (saniye):</label>
@@ -153,16 +153,11 @@
             } else if (phase.name === 'Recovery') {
                 progressBar.style.backgroundColor = 'green';
                 progressBar.style.transition = `width ${phase.duration / 1000}s linear`;
-                progressBar.style.width = '100%';
-                setTimeout(() => {
-                    progressBar.style.width = '0%';
-                }, 50);
-            } else {
-                // Catch veya Finish fazında progress bar sabit kalır
                 progressBar.style.width = '0%';
-                progressBar.style.transition = 'none';
+                setTimeout(() => {
+                    progressBar.style.width = '100%';
+                }, 50);
             }
-
             // Mevcut faz tamamlandıktan sonra bir sonraki faza geç
             timeoutId = setTimeout(() => {
                 currentPhase++;
