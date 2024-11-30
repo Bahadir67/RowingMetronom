@@ -74,6 +74,10 @@
             margin-top: 10px; /* Çekiş sayısı ile geçen süre arasında boşluk */
             display: block;
         }
+        #currentSpm {
+            font-size: 1.6em; /* Geçerli SPM yazısı */
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
@@ -107,6 +111,7 @@
         <span id="strokeCount">Çekiş Sayısı: 0</span>
     </div>
     <h2 id="status">Durum: Hazır</h2>
+    <div id="currentSpm">Geçerli SPM: 10</div>
 
     <script>
         const startButton = document.getElementById('startButton');
@@ -114,6 +119,7 @@
         const progressBar = document.getElementById('progressBar');
         const elapsedTimeDisplay = document.getElementById('elapsedTime');
         const strokeCountDisplay = document.getElementById('strokeCount');
+        const currentSpmDisplay = document.getElementById('currentSpm');
 
         // Girdi elementlerini tanımlıyoruz
         const spmInput = document.getElementById('spm');
@@ -135,6 +141,7 @@
         let intervalId = null; // Zamanlayıcıyı güncellemek için
         let strokeCount = 0; // Toplam çekiş sayısını tutar
         let totalElapsedTime = 0; // Başlangıçtan itibaren geçen süre
+        let currentSpm = 10; // Başlangıçtaki geçerli SPM
 
         const stopAllSounds = () => {
             // Tüm sesleri durdur ve başa sar
@@ -197,6 +204,14 @@
             }, 100);
         };
 
+        const increaseSpm = () => {
+            const targetSpm = parseFloat(spmInput.value);
+            if (currentSpm < targetSpm) {
+                currentSpm++;
+                currentSpmDisplay.textContent = `Geçerli SPM: ${currentSpm}`;
+            }
+        };
+
         const playPhase = () => {
             if (!isRunning) return; // Çalışma durdurulduysa devam etme
 
@@ -204,6 +219,7 @@
                 currentPhase = 0; // Döngü başa dönsün
                 strokeCount++; // Her tur tamamlandığında çekiş sayısını artır
                 strokeCountDisplay.textContent = `Çekiş Sayısı: ${strokeCount}`;
+                increaseSpm(); // SPM'yi artır
             }
 
             const phase = phases[currentPhase];
@@ -268,6 +284,8 @@
             // Başlangıç anından itibaren geçen süreyi sıfırla ve zamanlayıcıyı başlat
             totalElapsedTime = 0;
             strokeCount = 0; // Çekiş sayısını sıfırla
+            currentSpm = 10; // Başlangıç SPM değerini ayarla
+            currentSpmDisplay.textContent = `Geçerli SPM: ${currentSpm}`;
             elapsedTimeDisplay.textContent = "Geçen Süre: 0 saniye";
             strokeCountDisplay.textContent = "Çekiş Sayısı: 0";
             updateElapsedTime();
