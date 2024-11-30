@@ -51,18 +51,26 @@
         const startButton = document.getElementById('startButton');
         const status = document.getElementById('status');
 
-        // Her faz için farklı ses dosyalarını tanımlıyoruz
-        const catchAndFinishSound = new Audio('./sounds/stop.mp3'); // Catch ve Finish için aynı ses
-        const driveSound = new Audio('./sounds/drive.mp3');        // Drive için ses
-        const recoverySound = new Audio('./sounds/recovery.mp3');  // Recovery için ses
+        // Ses dosyalarını tanımlıyoruz
+        const catchAndFinishSound = new Audio('./sounds/stop.mp3');
+        const driveSound = new Audio('./sounds/drive.mp3');
+        const recoverySound = new Audio('./sounds/recovery.mp3');
+
+        let isRunning = false; // Döngünün çalışıp çalışmadığını kontrol eder
 
         startButton.addEventListener('click', () => {
+            if (isRunning) {
+                status.textContent = "Zaten çalışıyor!";
+                return;
+            }
+
+            isRunning = true;
+
             const catchTime = parseInt(document.getElementById('catchTime').value) * 1000;
             const driveTime = parseInt(document.getElementById('driveTime').value) * 1000;
             const finishTime = parseInt(document.getElementById('finishTime').value) * 1000;
             const recoveryTime = parseInt(document.getElementById('recoveryTime').value) * 1000;
 
-            // Fazlar ve ilgili süre/sesleri tanımlıyoruz
             const phases = [
                 { name: 'Catch', duration: catchTime, sound: catchAndFinishSound },
                 { name: 'Drive', duration: driveTime, sound: driveSound },
@@ -72,15 +80,26 @@
 
             let currentPhase = 0;
 
+            const stopAllSounds = () => {
+                // Tüm sesleri durdur ve başa sar
+                [catchAndFinishSound, driveSound, recoverySound].forEach(sound => {
+                    sound.pause();
+                    sound.currentTime = 0;
+                });
+            };
+
             const playPhase = () => {
+                if (!isRunning) return; // Çalışma durdurulduysa devam etme
+
                 if (currentPhase >= phases.length) {
-                    currentPhase = 0; // Döngü tekrar başa dönsün
+                    currentPhase = 0; // Döngü başa dönsün
                 }
 
                 const phase = phases[currentPhase];
                 status.textContent = `Durum: ${phase.name} (${phase.duration / 1000}s)`;
 
-                // Fazın sesini çal
+                // Fazın sesini başlatmadan önce tüm sesleri durdur
+                stopAllSounds();
                 phase.sound.play().catch((error) => console.error(`${phase.name} sesi çalınamadı:`, error));
 
                 setTimeout(() => {
@@ -91,6 +110,13 @@
 
             status.textContent = 'Durum: Başlıyor...';
             playPhase();
+
+            // Döngüyü durdurma (isteğe bağlı süre sonunda veya manuel olarak)
+            setTimeout(() => {
+                isRunning = false;
+                stopAllSounds();
+                status.textContent = 'Durum: Bitti!';
+            }, phases.reduce((total, phase) => total + phase.duration, 0)); // Tüm fazların toplam süresi
         });
     </script>
 </body>
