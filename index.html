@@ -37,6 +37,14 @@
             position: absolute;
             border-radius: 15px;
         }
+        #timer {
+            font-size: 1.5em;
+            margin-top: 20px;
+        }
+        #strokeCount {
+            font-size: 1.5em;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
@@ -44,7 +52,7 @@
     <div id="settings">
         <div class="form-group">
             <label>SPM (Stroke Per Minute - Dakikadaki Çekiş):</label>
-            <input type="number" step="0.1" id="spm" placeholder="Dakikadaki Çekiş Sayısı" value="23">
+            <input type="number" step="0.1" id="spm" placeholder="Dakikadaki Çekiş Sayısı" value="21">
         </div>
         <div class="form-group">
             <label>Drive Süresi (saniye):</label>
@@ -59,12 +67,17 @@
     <div id="progressBarContainer">
         <div id="progressBar"></div>
     </div>
+    <div id="timerAndStroke">
+        <span id="timer">Kalan Süre: 0</span> | <span id="strokeCount">Çekiş Sayısı: 0</span>
+    </div>
     <h2 id="status">Durum: Hazır</h2>
 
     <script>
         const startButton = document.getElementById('startButton');
         const status = document.getElementById('status');
         const progressBar = document.getElementById('progressBar');
+        const timerDisplay = document.getElementById('timer');
+        const strokeCountDisplay = document.getElementById('strokeCount');
 
         // Ses dosyalarını tanımlıyoruz
         const catchAndFinishSound = new Audio('./sounds/stop.mp3');
@@ -74,6 +87,8 @@
         let isRunning = false; // Döngünün çalışıp çalışmadığını kontrol eder
         let currentPhase = 0; // Şu anki fazı tutar
         let timeoutId = null; // Faz zamanlayıcısını tutar
+        let intervalId = null; // Zamanlayıcıyı güncellemek için
+        let strokeCount = 0; // Toplam çekiş sayısını tutar
 
         const stopAllSounds = () => {
             // Tüm sesleri durdur ve başa sar
@@ -92,34 +107,15 @@
                 const driveTimeInput = document.getElementById('driveTime');
                 const recoveryTimeInput = document.getElementById('recoveryTime');
 
-                let driveTime = parseFloat(driveTimeInput.value) * 1000;
-                let recoveryTime = parseFloat(recoveryTimeInput.value) * 1000;
+                // Drive ve Recovery sürelerini toplam sürenin yarısı olacak şekilde ayarla
+                const equalTime = totalStrokeTime / 2;
 
-                if (driveTime && driveTime < totalStrokeTime) {
-                    recoveryTime = totalStrokeTime - driveTime;
-                    recoveryTimeInput.value = (recoveryTime / 1000).toFixed(2);
-                } else if (recoveryTime && recoveryTime < totalStrokeTime) {
-                    driveTime = totalStrokeTime - recoveryTime;
-                    driveTimeInput.value = (driveTime / 1000).toFixed(2);
-                } else {
-                    // Eşit olarak bölüştür
-                    driveTime = 0.5 * totalStrokeTime;
-                    recoveryTime = 0.5 * totalStrokeTime;
-                    driveTimeInput.value = (driveTime / 1000).toFixed(2);
-                    recoveryTimeInput.value = (recoveryTime / 1000).toFixed(2);
-                }
+                driveTimeInput.value = (equalTime / 1000).toFixed(2);
+                recoveryTimeInput.value = (equalTime / 1000).toFixed(2);
             }
         };
 
         document.getElementById('spm').addEventListener('input', () => {
-            updateDriveRecoveryValues();
-        });
-
-        document.getElementById('driveTime').addEventListener('input', () => {
-            updateDriveRecoveryValues();
-        });
-
-        document.getElementById('recoveryTime').addEventListener('input', () => {
             updateDriveRecoveryValues();
         });
 
@@ -128,11 +124,27 @@
             updateDriveRecoveryValues();
         });
 
+        const updateTimer = (duration) => {
+            let remainingTime = duration / 1000; // Saniye cinsinden kalan süre
+            timerDisplay.textContent = `Kalan Süre: ${remainingTime.toFixed(1)}`;
+
+            clearInterval(intervalId); // Önceki zamanlayıcıyı temizle
+            intervalId = setInterval(() => {
+                remainingTime -= 0.1;
+                timerDisplay.textContent = `Kalan Süre: ${remainingTime.toFixed(1)}`;
+                if (remainingTime <= 0) {
+                    clearInterval(intervalId);
+                }
+            }, 100);
+        };
+
         const playPhase = () => {
             if (!isRunning) return; // Çalışma durdurulduysa devam etme
 
             if (currentPhase >= phases.length) {
                 currentPhase = 0; // Döngü başa dönsün
+                strokeCount++; // Her tur tamamlandığında çekiş sayısını artır
+                strokeCountDisplay.textContent = `Çekiş Sayısı: ${strokeCount}`;
             }
 
             const phase = phases[currentPhase];
@@ -142,7 +154,9 @@
             stopAllSounds();
             phase.sound.play().catch((error) => console.error(`${phase.name} sesi çalınamadı:`, error));
 
-            // Progress bar'ı kontrol et
+            // Progress bar'ı kontrol et ve zamanlayıcıyı güncelle
+            updateTimer(phase.duration);
+
             if (phase.name === 'Drive') {
                 progressBar.style.backgroundColor = 'red';
                 progressBar.style.transition = `width ${phase.duration / 1000}s linear`;
@@ -157,7 +171,12 @@
                 setTimeout(() => {
                     progressBar.style.width = '0%';
                 }, 50);
-            }            
+            } else {
+                // Catch veya Finish fazında progress bar sabit kalır
+                progressBar.style.width = '0%';
+                progressBar.style.transition = 'none';
+            }
+
             // Mevcut faz tamamlandıktan sonra bir sonraki faza geç
             timeoutId = setTimeout(() => {
                 currentPhase++;
@@ -169,12 +188,14 @@
             if (isRunning) {
                 // Metronomu durdur
                 clearTimeout(timeoutId);
+                clearInterval(intervalId);
                 stopAllSounds();
                 isRunning = false;
                 status.textContent = "Durum: Durduruldu";
                 startButton.textContent = "Başlat";
                 progressBar.style.width = '0%';
                 progressBar.style.transition = 'none';
+                timerDisplay.textContent = "Kalan Süre: 0";
                 return;
             }
 
@@ -198,8 +219,4 @@
 
             status.textContent = 'Durum: Başlıyor...';
             currentPhase = 0; // İlk fazdan başla
-            playPhase();
-        });
-    </script>
-</body>
-</html>
+           
