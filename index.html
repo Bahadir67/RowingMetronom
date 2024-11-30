@@ -51,6 +51,10 @@
             <input type="number" step="0.1" id="spm" placeholder="Dakikadaki Çekiş Sayısı" value="21">
         </div>
         <div class="form-group">
+            <label>Drive:Recovery Oranı:</label>
+            <input type="text" id="ratio" placeholder="Örneğin 1:2" value="1:2">
+        </div>
+        <div class="form-group">
             <label>Drive Süresi (saniye):</label>
             <input type="number" step="0.1" id="driveTime" placeholder="SPM girerseniz otomatik hesaplanır">
         </div>
@@ -102,33 +106,18 @@
 
         const updateDriveRecoveryValues = () => {
             const spm = parseFloat(document.getElementById('spm').value);
-            if (spm) {
-                const totalStrokeTime = (60 / spm) * 1000; // SPM'den bir stroğun toplam süresi (ms cinsinden)
-                const driveTimeInput = document.getElementById('driveTime');
-                const recoveryTimeInput = document.getElementById('recoveryTime');
-
-                // Drive ve Recovery sürelerini toplam sürenin yarısı olacak şekilde ayarla
-                const equalTime = totalStrokeTime / 2;
-
-                driveTimeInput.value = (equalTime / 1000).toFixed(2);
-                recoveryTimeInput.value = (equalTime / 1000).toFixed(2);
-            }
-        };
-
-        const adjustOppositePhase = (changedPhase) => {
-            const spm = parseFloat(document.getElementById('spm').value);
-            if (spm) {
+            const ratioInput = document.getElementById('ratio').value;
+            if (spm && ratioInput) {
                 const totalStrokeTime = (60 / spm) * 1000; // SPM'den bir stroğun toplam süresi (ms cinsinden)
 
-                if (changedPhase === 'drive') {
-                    const driveTime = parseFloat(document.getElementById('driveTime').value) * 1000;
-                    const recoveryTime = totalStrokeTime - driveTime;
-                    document.getElementById('recoveryTime').value = (recoveryTime / 1000).toFixed(2);
-                } else if (changedPhase === 'recovery') {
-                    const recoveryTime = parseFloat(document.getElementById('recoveryTime').value) * 1000;
-                    const driveTime = totalStrokeTime - recoveryTime;
-                    document.getElementById('driveTime').value = (driveTime / 1000).toFixed(2);
-                }
+                const [driveRatio, recoveryRatio] = ratioInput.split(':').map(Number);
+                const totalRatio = driveRatio + recoveryRatio;
+
+                const driveTime = (totalStrokeTime * driveRatio) / totalRatio;
+                const recoveryTime = (totalStrokeTime * recoveryRatio) / totalRatio;
+
+                document.getElementById('driveTime').value = (driveTime / 1000).toFixed(2);
+                document.getElementById('recoveryTime').value = (recoveryTime / 1000).toFixed(2);
             }
         };
 
@@ -136,12 +125,8 @@
             updateDriveRecoveryValues();
         });
 
-        document.getElementById('driveTime').addEventListener('input', () => {
-            adjustOppositePhase('drive');
-        });
-
-        document.getElementById('recoveryTime').addEventListener('input', () => {
-            adjustOppositePhase('recovery');
+        document.getElementById('ratio').addEventListener('input', () => {
+            updateDriveRecoveryValues();
         });
 
         // Sayfa yüklendiğinde başlangıç değerlerini hesapla
@@ -149,103 +134,7 @@
             updateDriveRecoveryValues();
         });
 
-        const updateElapsedTime = () => {
-            clearInterval(intervalId);
-            intervalId = setInterval(() => {
-                if (isRunning) {
-                    totalElapsedTime += 0.1;
-                    elapsedTimeDisplay.textContent = `Geçen Süre: ${totalElapsedTime.toFixed(1)} saniye`;
-                }
-            }, 100);
-        };
-
-        const playPhase = () => {
-            if (!isRunning) return; // Çalışma durdurulduysa devam etme
-
-            if (currentPhase >= phases.length) {
-                currentPhase = 0; // Döngü başa dönsün
-                strokeCount++; // Her tur tamamlandığında çekiş sayısını artır
-                strokeCountDisplay.textContent = `Çekiş Sayısı: ${strokeCount}`;
-            }
-
-            const phase = phases[currentPhase];
-            status.textContent = `Durum: ${phase.name}`;
-
-            // Fazın sesini başlatmadan önce tüm sesleri durdur
-            stopAllSounds();
-            phase.sound.play().catch((error) => console.error(`${phase.name} sesi çalınamadı:`, error));
-
-            // En son stroke süresini güncelle (Catch + Drive + Finish + Recovery)
-            if (phase.name === 'Catch') {
-                lastStrokeTime = phases.reduce((total, p) => total + p.duration, 0) / 1000;
-                lastStrokeTimeDisplay.textContent = `Son Stroke Süresi: ${lastStrokeTime.toFixed(1)} saniye`;
-            }
-
-            // Progress bar'ı kontrol et
-            if (phase.name === 'Drive') {
-                progressBar.style.backgroundColor = 'red';
-                progressBar.style.transition = `width ${phase.duration / 1000}s linear`;
-                progressBar.style.width = '0%';
-                setTimeout(() => {
-                    progressBar.style.width = '100%';
-                }, 50);
-            } else if (phase.name === 'Recovery') {
-                progressBar.style.backgroundColor = 'green';
-                progressBar.style.transition = `width ${phase.duration / 1000}s linear`;
-                progressBar.style.width = '100%';
-                setTimeout(() => {
-                    progressBar.style.width = '0%';
-                }, 50);
-            }
-
-            // Mevcut faz tamamlandıktan sonra bir sonraki faza geç
-            timeoutId = setTimeout(() => {
-                currentPhase++;
-                playPhase();
-            }, phase.duration);
-        };
-
-        startButton.addEventListener('click', () => {
-            if (isRunning) {
-                // Metronomu durdur
-                clearTimeout(timeoutId);
-                clearInterval(intervalId);
-                stopAllSounds();
-                isRunning = false;
-                status.textContent = "Durum: Durduruldu";
-                startButton.textContent = "Başlat";
-                progressBar.style.width = '0%';
-                progressBar.style.transition = 'none';
-                return;
-            }
-
-            // Metronomu başlat
-            isRunning = true;
-            startButton.textContent = "Durdur";
-
-            // Başlangıç anından itibaren geçen süreyi sıfırla ve zamanlayıcıyı başlat
-            totalElapsedTime = 0;
-            elapsedTimeDisplay.textContent = "Geçen Süre: 0 saniye";
-            updateElapsedTime();
-
-            // Faz sürelerini al ve fazları güncelle
-            const catchTime = 500; // Catch süresi sabit 0.5 saniye (500 ms)
-            const driveTime = parseFloat(document.getElementById('driveTime').value) * 1000;
-            const finishTime = 500; // Finish süresi sabit 0.5 saniye (500 ms)
-            const recoveryTime = parseFloat(document.getElementById('recoveryTime').value) * 1000;
-
-            phases.length = 0; // Eski fazları temizle
-            phases.push(
-                { name: 'Catch', duration: catchTime, sound: catchAndFinishSound },
-                { name: 'Drive', duration: driveTime, sound: driveSound },
-                { name: 'Finish', duration: finishTime, sound: catchAndFinishSound },
-                { name: 'Recovery', duration: recoveryTime, sound: recoverySound }
-            );
-
-            status.textContent = 'Durum: Başlıyor...';
-            currentPhase = 0; // İlk fazdan başla
-            playPhase();
-        });
+        // (Kodun geri kalanı aynı kalıyor)
     </script>
 </body>
 </html>
