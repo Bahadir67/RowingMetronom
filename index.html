@@ -22,6 +22,9 @@
             margin-top: 20px;
             cursor: pointer;
         }
+        #phaseDetails {
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
@@ -49,11 +52,13 @@
         </div>
         <button id="startButton">Başlat</button>
     </div>
+    <div id="phaseDetails"></div>
     <h2 id="status">Durum: Hazır</h2>
 
     <script>
         const startButton = document.getElementById('startButton');
         const status = document.getElementById('status');
+        const phaseDetails = document.getElementById('phaseDetails');
 
         // Ses dosyalarını tanımlıyoruz
         const catchAndFinishSound = new Audio('./sounds/stop.mp3');
@@ -74,6 +79,33 @@
 
         const phases = [];
 
+        const updatePhaseDetails = () => {
+            phaseDetails.innerHTML = ''; // Eski bilgileri temizle
+            phases.forEach((phase, index) => {
+                const phaseElement = document.createElement('p');
+                phaseElement.textContent = `${index + 1}. Faz: ${phase.name} - Süre: ${(phase.duration / 1000).toFixed(2)} saniye`;
+                phaseDetails.appendChild(phaseElement);
+            });
+        };
+
+        document.getElementById('spm').addEventListener('input', () => {
+            const spm = parseFloat(document.getElementById('spm').value);
+
+            if (spm) {
+                const totalStrokeTime = (60 / spm) * 1000; // SPM'den bir stroğun toplam süresi (ms cinsinden)
+                const catchTime = 0.15 * totalStrokeTime;
+                const driveTime = 0.35 * totalStrokeTime;
+                const finishTime = 0.15 * totalStrokeTime;
+                const recoveryTime = 0.35 * totalStrokeTime;
+
+                // Faz sürelerini input alanlarına yerleştir
+                document.getElementById('catchTime').value = (catchTime / 1000).toFixed(2);
+                document.getElementById('driveTime').value = (driveTime / 1000).toFixed(2);
+                document.getElementById('finishTime').value = (finishTime / 1000).toFixed(2);
+                document.getElementById('recoveryTime').value = (recoveryTime / 1000).toFixed(2);
+            }
+        });
+
         const playPhase = () => {
             if (!isRunning) return; // Çalışma durdurulduysa devam etme
 
@@ -82,7 +114,7 @@
             }
 
             const phase = phases[currentPhase];
-            status.textContent = `Durum: ${phase.name} (${phase.duration / 1000}s)`;
+            status.textContent = `Durum: ${phase.name} (${(phase.duration / 1000).toFixed(2)}s)`;
 
             // Fazın sesini başlatmadan önce tüm sesleri durdur
             stopAllSounds();
@@ -111,20 +143,10 @@
             startButton.textContent = "Durdur";
 
             // Faz sürelerini al ve fazları güncelle
-            const spm = parseFloat(document.getElementById('spm').value);
-            let catchTime = parseFloat(document.getElementById('catchTime').value) * 1000;
-            let driveTime = parseFloat(document.getElementById('driveTime').value) * 1000;
-            let finishTime = parseFloat(document.getElementById('finishTime').value) * 1000;
-            let recoveryTime = parseFloat(document.getElementById('recoveryTime').value) * 1000;
-
-            // SPM verildiyse faz sürelerini hesapla
-            if (spm) {
-                const totalStrokeTime = (60 / spm) * 1000; // SPM'den bir stroğun toplam süresi (ms cinsinden)
-                catchTime = 0.15 * totalStrokeTime;
-                driveTime = 0.35 * totalStrokeTime;
-                finishTime = 0.15 * totalStrokeTime;
-                recoveryTime = 0.35 * totalStrokeTime;
-            }
+            const catchTime = parseFloat(document.getElementById('catchTime').value) * 1000;
+            const driveTime = parseFloat(document.getElementById('driveTime').value) * 1000;
+            const finishTime = parseFloat(document.getElementById('finishTime').value) * 1000;
+            const recoveryTime = parseFloat(document.getElementById('recoveryTime').value) * 1000;
 
             phases.length = 0; // Eski fazları temizle
             phases.push(
@@ -133,6 +155,8 @@
                 { name: 'Finish', duration: finishTime, sound: catchAndFinishSound },
                 { name: 'Recovery', duration: recoveryTime, sound: recoverySound }
             );
+
+            updatePhaseDetails(); // Faz sürelerini kullanıcıya göster
 
             status.textContent = 'Durum: Başlıyor...';
             currentPhase = 0; // İlk fazdan başla
