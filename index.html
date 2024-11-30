@@ -35,16 +35,8 @@
             <input type="number" step="0.1" id="spm" placeholder="Dakikadaki Çekiş Sayısı">
         </div>
         <div class="form-group">
-            <label>Catch Süresi (saniye):</label>
-            <input type="number" step="0.1" id="catchTime" placeholder="SPM girerseniz otomatik hesaplanır">
-        </div>
-        <div class="form-group">
             <label>Drive Süresi (saniye):</label>
             <input type="number" step="0.1" id="driveTime" placeholder="SPM girerseniz otomatik hesaplanır">
-        </div>
-        <div class="form-group">
-            <label>Finish Süresi (saniye):</label>
-            <input type="number" step="0.1" id="finishTime" placeholder="SPM girerseniz otomatik hesaplanır">
         </div>
         <div class="form-group">
             <label>Recovery Süresi (saniye):</label>
@@ -93,15 +85,16 @@
 
             if (spm) {
                 const totalStrokeTime = (60 / spm) * 1000; // SPM'den bir stroğun toplam süresi (ms cinsinden)
-                const catchTime = 0.15 * totalStrokeTime;
-                const driveTime = 0.35 * totalStrokeTime;
-                const finishTime = 0.15 * totalStrokeTime;
-                const recoveryTime = 0.35 * totalStrokeTime;
+                const catchTime = 500; // Catch sabit olarak 0.5 saniye (500 ms)
+                const finishTime = 500; // Finish sabit olarak 0.5 saniye (500 ms)
+                const remainingTime = totalStrokeTime - (catchTime + finishTime);
+
+                // Drive ve Recovery sürelerini eşit olarak bölüştürelim
+                const driveTime = 0.5 * remainingTime;
+                const recoveryTime = 0.5 * remainingTime;
 
                 // Faz sürelerini input alanlarına yerleştir
-                document.getElementById('catchTime').value = (catchTime / 1000).toFixed(2);
                 document.getElementById('driveTime').value = (driveTime / 1000).toFixed(2);
-                document.getElementById('finishTime').value = (finishTime / 1000).toFixed(2);
                 document.getElementById('recoveryTime').value = (recoveryTime / 1000).toFixed(2);
             }
         });
@@ -143,9 +136,9 @@
             startButton.textContent = "Durdur";
 
             // Faz sürelerini al ve fazları güncelle
-            const catchTime = parseFloat(document.getElementById('catchTime').value) * 1000;
+            const catchTime = 500; // Catch süresi sabit 0.5 saniye (500 ms)
             const driveTime = parseFloat(document.getElementById('driveTime').value) * 1000;
-            const finishTime = parseFloat(document.getElementById('finishTime').value) * 1000;
+            const finishTime = 500; // Finish süresi sabit 0.5 saniye (500 ms)
             const recoveryTime = parseFloat(document.getElementById('recoveryTime').value) * 1000;
 
             phases.length = 0; // Eski fazları temizle
