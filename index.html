@@ -48,7 +48,7 @@
     <div id="settings">
         <div class="form-group">
             <label>SPM (Stroke Per Minute - Dakikadaki Çekiş):</label>
-            <input type="number" step="0.1" id="spm" placeholder="Dakikadaki Çekiş Sayısı" value="22">
+            <input type="number" step="0.1" id="spm" placeholder="Dakikadaki Çekiş Sayısı" value="21">
         </div>
         <div class="form-group">
             <label>Drive:Recovery Oranı:</label>
@@ -118,25 +118,39 @@
 
             if (trigger === 'spm' && spm && totalRatio) {
                 const totalStrokeTime = (60 / spm) * 1000;
-                const driveTime = (totalStrokeTime * driveRatio) / totalRatio;
-                const recoveryTime = (totalStrokeTime * recoveryRatio) / totalRatio;
+                const catchAndFinishTotal = 1000; // Catch ve Finish toplam süresi 1 saniye (500 ms + 500 ms)
+                const remainingTime = totalStrokeTime - catchAndFinishTotal;
+
+                const driveTime = (remainingTime * driveRatio) / totalRatio;
+                const recoveryTime = (remainingTime * recoveryRatio) / totalRatio;
+
                 driveTimeInput.value = (driveTime / 1000).toFixed(2);
                 recoveryTimeInput.value = (recoveryTime / 1000).toFixed(2);
             } else if (trigger === 'ratio' && spm && totalRatio) {
                 const totalStrokeTime = (60 / spm) * 1000;
-                const driveTime = (totalStrokeTime * driveRatio) / totalRatio;
-                const recoveryTime = (totalStrokeTime * recoveryRatio) / totalRatio;
+                const catchAndFinishTotal = 1000;
+                const remainingTime = totalStrokeTime - catchAndFinishTotal;
+
+                const driveTime = (remainingTime * driveRatio) / totalRatio;
+                const recoveryTime = (remainingTime * recoveryRatio) / totalRatio;
+
                 driveTimeInput.value = (driveTime / 1000).toFixed(2);
                 recoveryTimeInput.value = (recoveryTime / 1000).toFixed(2);
             } else if (trigger === 'drive' && spm && totalRatio) {
                 const driveTime = parseFloat(driveTimeInput.value) * 1000;
                 const totalStrokeTime = (60 / spm) * 1000;
-                const recoveryTime = totalStrokeTime - driveTime;
+                const catchAndFinishTotal = 1000;
+                const remainingTime = totalStrokeTime - catchAndFinishTotal;
+                const recoveryTime = remainingTime - driveTime;
+
                 recoveryTimeInput.value = (recoveryTime / 1000).toFixed(2);
             } else if (trigger === 'recovery' && spm && totalRatio) {
                 const recoveryTime = parseFloat(recoveryTimeInput.value) * 1000;
                 const totalStrokeTime = (60 / spm) * 1000;
-                const driveTime = totalStrokeTime - recoveryTime;
+                const catchAndFinishTotal = 1000;
+                const remainingTime = totalStrokeTime - catchAndFinishTotal;
+                const driveTime = remainingTime - recoveryTime;
+
                 driveTimeInput.value = (driveTime / 1000).toFixed(2);
             }
         };
