@@ -111,7 +111,7 @@
         <span id="strokeCount">Çekiş Sayısı: 0</span>
     </div>
     <h2 id="status">Durum: Hazır</h2>
-    <div id="currentSpm">Geçerli SPM: 21</div>
+    <div id="currentSpm">Geçerli SPM: 10</div>
 
     <script>
         const startButton = document.getElementById('startButton');
@@ -141,7 +141,7 @@
         let intervalId = null; // Zamanlayıcıyı güncellemek için
         let strokeCount = 0; // Toplam çekiş sayısını tutar
         let totalElapsedTime = 0; // Başlangıçtan itibaren geçen süre
-        let currentSpm = 210; // Başlangıçtaki geçerli SPM
+        let currentSpm = 10; // Başlangıçtaki geçerli SPM
 
         const stopAllSounds = () => {
             // Tüm sesleri durdur ve başa sar
@@ -215,6 +215,7 @@
             if (currentSpm < targetSpm) {
                 currentSpm++;
                 currentSpmDisplay.textContent = `Geçerli SPM: ${currentSpm}`;
+            if (currentSpm < 0) currentSpm = 0;
                 updateValues('spm'); // SPM değerini güncelle ve zamanlamaları ayarla
             }
         };
@@ -312,7 +313,7 @@
             // Başlangıç anından itibaren geçen süreyi sıfırla ve zamanlayıcıyı başlat
             totalElapsedTime = 0;
             strokeCount = 0; // Çekiş sayısını sıfırla
-            currentSpm = 10; // Başlangıç SPM değerini ayarla
+            currentSpm = parseFloat(spmInput.value) - 5; // Başlangıç SPM değeri set edilen SPM'den 5 eksik
             currentSpmDisplay.textContent = `Geçerli SPM: ${currentSpm}`;
             elapsedTimeDisplay.textContent = "Geçen Süre: 0 saniye";
             strokeCountDisplay.textContent = "Çekiş Sayısı: 0";
