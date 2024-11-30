@@ -28,20 +28,24 @@
     <h1>Rowing Metronome</h1>
     <div id="settings">
         <div class="form-group">
+            <label>SPM (Stroke Per Minute - Dakikadaki Çekiş):</label>
+            <input type="number" step="0.1" id="spm" placeholder="Dakikadaki Çekiş Sayısı">
+        </div>
+        <div class="form-group">
             <label>Catch Süresi (saniye):</label>
-            <input type="number" id="catchTime" value="1">
+            <input type="number" step="0.1" id="catchTime" placeholder="SPM girerseniz otomatik hesaplanır">
         </div>
         <div class="form-group">
             <label>Drive Süresi (saniye):</label>
-            <input type="number" id="driveTime" value="2">
+            <input type="number" step="0.1" id="driveTime" placeholder="SPM girerseniz otomatik hesaplanır">
         </div>
         <div class="form-group">
             <label>Finish Süresi (saniye):</label>
-            <input type="number" id="finishTime" value="1">
+            <input type="number" step="0.1" id="finishTime" placeholder="SPM girerseniz otomatik hesaplanır">
         </div>
         <div class="form-group">
             <label>Recovery Süresi (saniye):</label>
-            <input type="number" id="recoveryTime" value="3">
+            <input type="number" step="0.1" id="recoveryTime" placeholder="SPM girerseniz otomatik hesaplanır">
         </div>
         <button id="startButton">Başlat</button>
     </div>
@@ -107,10 +111,20 @@
             startButton.textContent = "Durdur";
 
             // Faz sürelerini al ve fazları güncelle
-            const catchTime = parseInt(document.getElementById('catchTime').value) * 1000;
-            const driveTime = parseInt(document.getElementById('driveTime').value) * 1000;
-            const finishTime = parseInt(document.getElementById('finishTime').value) * 1000;
-            const recoveryTime = parseInt(document.getElementById('recoveryTime').value) * 1000;
+            const spm = parseFloat(document.getElementById('spm').value);
+            let catchTime = parseFloat(document.getElementById('catchTime').value) * 1000;
+            let driveTime = parseFloat(document.getElementById('driveTime').value) * 1000;
+            let finishTime = parseFloat(document.getElementById('finishTime').value) * 1000;
+            let recoveryTime = parseFloat(document.getElementById('recoveryTime').value) * 1000;
+
+            // SPM verildiyse faz sürelerini hesapla
+            if (spm) {
+                const totalStrokeTime = (60 / spm) * 1000; // SPM'den bir stroğun toplam süresi (ms cinsinden)
+                catchTime = 0.15 * totalStrokeTime;
+                driveTime = 0.35 * totalStrokeTime;
+                finishTime = 0.15 * totalStrokeTime;
+                recoveryTime = 0.35 * totalStrokeTime;
+            }
 
             phases.length = 0; // Eski fazları temizle
             phases.push(
