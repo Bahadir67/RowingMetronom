@@ -15,6 +15,10 @@
         .form-group {
             margin: 10px;
         }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
         button {
             padding: 10px 20px;
             font-size: 16px;
@@ -46,20 +50,20 @@
     <h1>Rowing Metronome</h1>
     <div id="settings">
         <div class="form-group">
-            <label>SPM (Stroke Per Minute - Dakikadaki Çekiş):</label>
+            <label for="spm">SPM (Stroke Per Minute - Dakikadaki Çekiş):</label>
             <input type="number" step="0.1" id="spm" placeholder="Dakikadaki Çekiş Sayısı" value="21">
         </div>
         <div class="form-group">
-            <label>Drive:Recovery Oranı:</label>
+            <label for="ratio">Drive:Recovery Oranı:</label>
             <input type="text" id="ratio" placeholder="Örneğin 1:2" value="1:2">
         </div>
         <div class="form-group">
-            <label>Drive Süresi (saniye):</label>
+            <label for="driveTime">Drive Süresi (saniye):</label>
             <input type="number" step="0.1" id="driveTime" placeholder="SPM girerseniz otomatik hesaplanır">
             <input type="checkbox" id="driveSoundEnable" checked>
         </div>
         <div class="form-group">
-            <label>Recovery Süresi (saniye):</label>
+            <label for="recoveryTime">Recovery Süresi (saniye):</label>
             <input type="number" step="0.1" id="recoveryTime" placeholder="SPM girerseniz otomatik hesaplanır">
             <input type="checkbox" id="recoverySoundEnable" checked>
         </div>
