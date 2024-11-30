@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rowing Metronome</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        .form-group {
+            margin: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Rowing Metronome</h1>
+    <div id="settings">
+        <div class="form-group">
+            <label>Catch Süresi (saniye):</label>
+            <input type="number" id="catchTime" value="2">
+        </div>
+        <div class="form-group">
+            <label>Drive Süresi (saniye):</label>
+            <input type="number" id="driveTime" value="2">
+        </div>
+        <div class="form-group">
+            <label>Finish Süresi (saniye):</label>
+            <input type="number" id="finishTime" value="2">
+        </div>
+        <div class="form-group">
+            <label>Recovery Süresi (saniye):</label>
+            <input type="number" id="recoveryTime" value="2">
+        </div>
+        <button id="startButton">Başlat</button>
+    </div>
+    <h2 id="status">Durum: Hazır</h2>
+
+    <script>
+        const beep = new Audio('https://www.soundjay.com/button/beep-07.wav'); // Beep sesi
+        const startButton = document.getElementById('startButton');
+        const status = document.getElementById('status');
+
+        startButton.addEventListener('click', () => {
+            const catchTime = parseInt(document.getElementById('catchTime').value) * 1000;
+            const driveTime = parseInt(document.getElementById('driveTime').value) * 1000;
+            const finishTime = parseInt(document.getElementById('finishTime').value) * 1000;
+            const recoveryTime = parseInt(document.getElementById('recoveryTime').value) * 1000;
+
+            const phases = [
+                { name: 'Catch', duration: catchTime },
+                { name: 'Drive', duration: driveTime },
+                { name: 'Finish', duration: finishTime },
+                { name: 'Recovery', duration: recoveryTime }
+            ];
+
+            let currentPhase = 0;
+
+            const playPhase = () => {
+                if (currentPhase >= phases.length) {
+                    status.textContent = 'Durum: Tamamlandı!';
+                    return;
+                }
+
+                const phase = phases[currentPhase];
+                status.textContent = `Durum: ${phase.name} (${phase.duration / 1000}s)`;
+                beep.play();
+
+                setTimeout(() => {
+                    currentPhase++;
+                    playPhase();
+                }, phase.duration);
+            };
+
+            status.textContent = 'Durum: Başlıyor...';
+            playPhase();
+        });
+    </script>
+</body>
+</html>
