@@ -154,7 +154,11 @@
         const phases = [];
 
         const updateValues = (trigger) => {
-            const spm = parseFloat(spmInput.value);
+            let spm = currentSpm;
+            if (trigger === 'spm') {
+                spm = parseFloat(spmInput.value);
+                currentSpm = 10; // Başlangıç SPM değeri 10
+            }
             const ratio = ratioInput.value.split(':').map(Number);
             const driveRatio = ratio[0];
             const recoveryRatio = ratio[1];
@@ -209,6 +213,7 @@
             if (currentSpm < targetSpm) {
                 currentSpm++;
                 currentSpmDisplay.textContent = `Geçerli SPM: ${currentSpm}`;
+                updateValues('spm'); // SPM değerini güncelle ve zamanlamaları ayarla
             }
         };
 
