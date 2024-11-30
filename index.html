@@ -48,7 +48,7 @@
     <div id="settings">
         <div class="form-group">
             <label>SPM (Stroke Per Minute - Dakikadaki Çekiş):</label>
-            <input type="number" step="0.1" id="spm" placeholder="Dakikadaki Çekiş Sayısı" value="20">
+            <input type="number" step="0.1" id="spm" placeholder="Dakikadaki Çekiş Sayısı" value="21">
         </div>
         <div class="form-group">
             <label>Drive Süresi (saniye):</label>
@@ -64,7 +64,7 @@
         <div id="progressBar"></div>
     </div>
     <div id="timerAndStroke">
-        <span id="timer">Kalan Süre: 0</span> | <span id="strokeCount">Çekiş Sayısı: 0</span>
+        <span id="elapsedTime">Geçen Süre: 0</span> | <span id="strokeCount">Çekiş Sayısı: 0</span>
     </div>
     <h2 id="status">Durum: Hazır</h2>
 
@@ -72,7 +72,7 @@
         const startButton = document.getElementById('startButton');
         const status = document.getElementById('status');
         const progressBar = document.getElementById('progressBar');
-        const timerDisplay = document.getElementById('timer');
+        const elapsedTimeDisplay = document.getElementById('elapsedTime');
         const strokeCountDisplay = document.getElementById('strokeCount');
 
         // Ses dosyalarını tanımlıyoruz
@@ -85,6 +85,7 @@
         let timeoutId = null; // Faz zamanlayıcısını tutar
         let intervalId = null; // Zamanlayıcıyı güncellemek için
         let strokeCount = 0; // Toplam çekiş sayısını tutar
+        let totalElapsedTime = 0; // Başlangıçtan itibaren geçen süre
 
         const stopAllSounds = () => {
             // Tüm sesleri durdur ve başa sar
@@ -120,16 +121,12 @@
             updateDriveRecoveryValues();
         });
 
-        const updateTimer = (duration) => {
-            let remainingTime = duration / 1000; // Saniye cinsinden kalan süre
-            timerDisplay.textContent = `Kalan Süre: ${remainingTime.toFixed(1)}`;
-
-            clearInterval(intervalId); // Önceki zamanlayıcıyı temizle
+        const updateElapsedTime = () => {
+            clearInterval(intervalId);
             intervalId = setInterval(() => {
-                remainingTime -= 0.1;
-                timerDisplay.textContent = `Kalan Süre: ${remainingTime.toFixed(1)}`;
-                if (remainingTime <= 0) {
-                    clearInterval(intervalId);
+                if (isRunning) {
+                    totalElapsedTime += 0.1;
+                    elapsedTimeDisplay.textContent = `Geçen Süre: ${totalElapsedTime.toFixed(1)}`;
                 }
             }, 100);
         };
@@ -150,9 +147,7 @@
             stopAllSounds();
             phase.sound.play().catch((error) => console.error(`${phase.name} sesi çalınamadı:`, error));
 
-            // Progress bar'ı kontrol et ve zamanlayıcıyı güncelle
-            updateTimer(phase.duration);
-
+            // Progress bar'ı kontrol et
             if (phase.name === 'Drive') {
                 progressBar.style.backgroundColor = 'red';
                 progressBar.style.transition = `width ${phase.duration / 1000}s linear`;
@@ -167,10 +162,6 @@
                 setTimeout(() => {
                     progressBar.style.width = '0%';
                 }, 50);
-            } else {
-                // Catch veya Finish fazında progress bar sabit kalır
-                progressBar.style.width = '0%';
-                progressBar.style.transition = 'none';
             }
 
             // Mevcut faz tamamlandıktan sonra bir sonraki faza geç
@@ -191,13 +182,17 @@
                 startButton.textContent = "Başlat";
                 progressBar.style.width = '0%';
                 progressBar.style.transition = 'none';
-                timerDisplay.textContent = "Kalan Süre: 0";
                 return;
             }
 
             // Metronomu başlat
             isRunning = true;
             startButton.textContent = "Durdur";
+
+            // Başlangıç anından itibaren geçen süreyi sıfırla ve zamanlayıcıyı başlat
+            totalElapsedTime = 0;
+            elapsedTimeDisplay.textContent = "Geçen Süre: 0";
+            updateElapsedTime();
 
             // Faz sürelerini al ve fazları güncelle
             const catchTime = 500; // Catch süresi sabit 0.5 saniye (500 ms)
