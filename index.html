@@ -57,14 +57,22 @@
         const recoverySound = new Audio('./sounds/recovery.mp3');
 
         let isRunning = false; // Döngünün çalışıp çalışmadığını kontrol eder
+        let intervalId = null; // Döngü zamanlayıcısını tutar
 
         startButton.addEventListener('click', () => {
             if (isRunning) {
-                status.textContent = "Zaten çalışıyor!";
+                // Metronomu durdur
+                clearInterval(intervalId);
+                stopAllSounds();
+                isRunning = false;
+                status.textContent = "Durum: Durduruldu";
+                startButton.textContent = "Başlat";
                 return;
             }
 
+            // Metronomu başlat
             isRunning = true;
+            startButton.textContent = "Durdur";
 
             const catchTime = parseInt(document.getElementById('catchTime').value) * 1000;
             const driveTime = parseInt(document.getElementById('driveTime').value) * 1000;
@@ -102,21 +110,12 @@
                 stopAllSounds();
                 phase.sound.play().catch((error) => console.error(`${phase.name} sesi çalınamadı:`, error));
 
-                setTimeout(() => {
-                    currentPhase++;
-                    playPhase();
-                }, phase.duration);
+                currentPhase++;
             };
 
-            status.textContent = 'Durum: Başlıyor...';
-            playPhase();
-
-            // Döngüyü durdurma (isteğe bağlı süre sonunda veya manuel olarak)
-            setTimeout(() => {
-                isRunning = false;
-                stopAllSounds();
-                status.textContent = 'Durum: Bitti!';
-            }, phases.reduce((total, phase) => total + phase.duration, 0)); // Tüm fazların toplam süresi
+            // Döngüsel fazları çalıştırmak için setInterval kullanıyoruz
+            playPhase(); // İlk fazı hemen oynat
+            intervalId = setInterval(playPhase, phases.reduce((total, phase) => total + phase.duration, 0));
         });
     </script>
 </body>
