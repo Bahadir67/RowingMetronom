@@ -57,12 +57,44 @@
         const recoverySound = new Audio('./sounds/recovery.mp3');
 
         let isRunning = false; // Döngünün çalışıp çalışmadığını kontrol eder
-        let intervalId = null; // Döngü zamanlayıcısını tutar
+        let currentPhase = 0; // Şu anki fazı tutar
+        let timeoutId = null; // Faz zamanlayıcısını tutar
+
+        const stopAllSounds = () => {
+            // Tüm sesleri durdur ve başa sar
+            [catchAndFinishSound, driveSound, recoverySound].forEach(sound => {
+                sound.pause();
+                sound.currentTime = 0;
+            });
+        };
+
+        const phases = [];
+
+        const playPhase = () => {
+            if (!isRunning) return; // Çalışma durdurulduysa devam etme
+
+            if (currentPhase >= phases.length) {
+                currentPhase = 0; // Döngü başa dönsün
+            }
+
+            const phase = phases[currentPhase];
+            status.textContent = `Durum: ${phase.name} (${phase.duration / 1000}s)`;
+
+            // Fazın sesini başlatmadan önce tüm sesleri durdur
+            stopAllSounds();
+            phase.sound.play().catch((error) => console.error(`${phase.name} sesi çalınamadı:`, error));
+
+            // Mevcut faz tamamlandıktan sonra bir sonraki faza geç
+            timeoutId = setTimeout(() => {
+                currentPhase++;
+                playPhase();
+            }, phase.duration);
+        };
 
         startButton.addEventListener('click', () => {
             if (isRunning) {
                 // Metronomu durdur
-                clearInterval(intervalId);
+                clearTimeout(timeoutId);
                 stopAllSounds();
                 isRunning = false;
                 status.textContent = "Durum: Durduruldu";
@@ -74,48 +106,23 @@
             isRunning = true;
             startButton.textContent = "Durdur";
 
+            // Faz sürelerini al ve fazları güncelle
             const catchTime = parseInt(document.getElementById('catchTime').value) * 1000;
             const driveTime = parseInt(document.getElementById('driveTime').value) * 1000;
             const finishTime = parseInt(document.getElementById('finishTime').value) * 1000;
             const recoveryTime = parseInt(document.getElementById('recoveryTime').value) * 1000;
 
-            const phases = [
+            phases.length = 0; // Eski fazları temizle
+            phases.push(
                 { name: 'Catch', duration: catchTime, sound: catchAndFinishSound },
                 { name: 'Drive', duration: driveTime, sound: driveSound },
                 { name: 'Finish', duration: finishTime, sound: catchAndFinishSound },
                 { name: 'Recovery', duration: recoveryTime, sound: recoverySound }
-            ];
+            );
 
-            let currentPhase = 0;
-
-            const stopAllSounds = () => {
-                // Tüm sesleri durdur ve başa sar
-                [catchAndFinishSound, driveSound, recoverySound].forEach(sound => {
-                    sound.pause();
-                    sound.currentTime = 0;
-                });
-            };
-
-            const playPhase = () => {
-                if (!isRunning) return; // Çalışma durdurulduysa devam etme
-
-                if (currentPhase >= phases.length) {
-                    currentPhase = 0; // Döngü başa dönsün
-                }
-
-                const phase = phases[currentPhase];
-                status.textContent = `Durum: ${phase.name} (${phase.duration / 1000}s)`;
-
-                // Fazın sesini başlatmadan önce tüm sesleri durdur
-                stopAllSounds();
-                phase.sound.play().catch((error) => console.error(`${phase.name} sesi çalınamadı:`, error));
-
-                currentPhase++;
-            };
-
-            // Döngüsel fazları çalıştırmak için setInterval kullanıyoruz
-            playPhase(); // İlk fazı hemen oynat
-            intervalId = setInterval(playPhase, phases.reduce((total, phase) => total + phase.duration, 0));
+            status.textContent = 'Durum: Başlıyor...';
+            currentPhase = 0; // İlk fazdan başla
+            playPhase();
         });
     </script>
 </body>
