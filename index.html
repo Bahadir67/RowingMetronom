@@ -80,20 +80,44 @@
             });
         };
 
-        document.getElementById('spm').addEventListener('input', () => {
+        const updateDriveRecoveryValues = () => {
             const spm = parseFloat(document.getElementById('spm').value);
-
             if (spm) {
                 const totalStrokeTime = (60 / spm) * 1000; // SPM'den bir stroğun toplam süresi (ms cinsinden)
+                const driveTimeInput = document.getElementById('driveTime');
+                const recoveryTimeInput = document.getElementById('recoveryTime');
 
-                // Drive ve Recovery sürelerini eşit olarak bölüştürelim
-                const driveTime = 0.5 * totalStrokeTime;
-                const recoveryTime = 0.5 * totalStrokeTime;
+                let driveTime = parseFloat(driveTimeInput.value) * 1000;
+                let recoveryTime = parseFloat(recoveryTimeInput.value) * 1000;
 
-                // Faz sürelerini input alanlarına yerleştir
-                document.getElementById('driveTime').value = (driveTime / 1000).toFixed(2);
-                document.getElementById('recoveryTime').value = (recoveryTime / 1000).toFixed(2);
+                if (driveTime) {
+                    recoveryTime = totalStrokeTime - driveTime;
+                    recoveryTimeInput.value = (recoveryTime / 1000).toFixed(2);
+                } else if (recoveryTime) {
+                    driveTime = totalStrokeTime - recoveryTime;
+                    driveTimeInput.value = (driveTime / 1000).toFixed(2);
+                } else {
+                    // Eşit olarak bölüştür
+                    driveTime = 0.5 * totalStrokeTime;
+                    recoveryTime = 0.5 * totalStrokeTime;
+                    driveTimeInput.value = (driveTime / 1000).toFixed(2);
+                    recoveryTimeInput.value = (recoveryTime / 1000).toFixed(2);
+                }
+
+                updatePhaseDetails(); // Faz sürelerini göster
             }
+        };
+
+        document.getElementById('spm').addEventListener('input', () => {
+            updateDriveRecoveryValues();
+        });
+
+        document.getElementById('driveTime').addEventListener('input', () => {
+            updateDriveRecoveryValues();
+        });
+
+        document.getElementById('recoveryTime').addEventListener('input', () => {
+            updateDriveRecoveryValues();
         });
 
         const playPhase = () => {
