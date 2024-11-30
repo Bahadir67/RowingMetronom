@@ -85,13 +85,10 @@
 
             if (spm) {
                 const totalStrokeTime = (60 / spm) * 1000; // SPM'den bir stroğun toplam süresi (ms cinsinden)
-                const catchTime = 500; // Catch sabit olarak 0.5 saniye (500 ms)
-                const finishTime = 500; // Finish sabit olarak 0.5 saniye (500 ms)
-                const remainingTime = totalStrokeTime - (catchTime + finishTime);
 
                 // Drive ve Recovery sürelerini eşit olarak bölüştürelim
-                const driveTime = 0.5 * remainingTime;
-                const recoveryTime = 0.5 * remainingTime;
+                const driveTime = 0.5 * totalStrokeTime;
+                const recoveryTime = 0.5 * totalStrokeTime;
 
                 // Faz sürelerini input alanlarına yerleştir
                 document.getElementById('driveTime').value = (driveTime / 1000).toFixed(2);
