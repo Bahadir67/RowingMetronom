@@ -5,7 +5,9 @@
     <title>Rowing Metronome</title>
     <style>
         body {
-            background: linear-gradient(to bottom right, #6a11cb, #2575fc); /* Daha belirgin mavi ve mor tonları arasında geçiş */
+            background: url('background.jpg');
+            background-size: 100% 100%;
+            background-attachment: fixed;
             font-family: Arial, sans-serif;
             text-align: center;
             margin: 30px;
@@ -72,6 +74,10 @@
             margin-top: 10px; /* Çekiş sayısı ile geçen süre arasında boşluk */
             display: block;
         }
+        #currentSpm {
+            font-size: 1.6em; /* Geçerli SPM yazısı */
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
@@ -105,6 +111,7 @@
         <span id="strokeCount">Çekiş Sayısı: 0</span>
     </div>
     <h2 id="status">Durum: Hazır</h2>
+    <div id="currentSpm">Geçerli SPM: 10</div>
 
     <script>
         const startButton = document.getElementById('startButton');
@@ -112,6 +119,7 @@
         const progressBar = document.getElementById('progressBar');
         const elapsedTimeDisplay = document.getElementById('elapsedTime');
         const strokeCountDisplay = document.getElementById('strokeCount');
+        const currentSpmDisplay = document.getElementById('currentSpm');
 
         // Girdi elementlerini tanımlıyoruz
         const spmInput = document.getElementById('spm');
@@ -133,6 +141,7 @@
         let intervalId = null; // Zamanlayıcıyı güncellemek için
         let strokeCount = 0; // Toplam çekiş sayısını tutar
         let totalElapsedTime = 0; // Başlangıçtan itibaren geçen süre
+        let currentSpm = 10; // Başlangıçtaki geçerli SPM
 
         const stopAllSounds = () => {
             // Tüm sesleri durdur ve başa sar
@@ -145,7 +154,13 @@
         const phases = [];
 
         const updateValues = (trigger) => {
-            const spm = parseFloat(spmInput.value);
+            let spm = currentSpm;
+            if (trigger === 'spm') {
+                spm = parseFloat(spmInput.value);
+                currentSpm = 10; // Başlangıç SPM değeri 10
+            } else if (trigger === 'current') {
+                spm = currentSpm;
+            }
             const ratio = ratioInput.value.split(':').map(Number);
             const driveRatio = ratio[0];
             const recoveryRatio = ratio[1];
@@ -195,6 +210,15 @@
             }, 100);
         };
 
+        const increaseSpm = () => {
+            const targetSpm = parseFloat(spmInput.value);
+            if (currentSpm < targetSpm) {
+                currentSpm++;
+                currentSpmDisplay.textContent = `Geçerli SPM: ${currentSpm}`;
+                updateValues('spm'); // SPM değerini güncelle ve zamanlamaları ayarla
+            }
+        };
+
         const playPhase = () => {
             if (!isRunning) return; // Çalışma durdurulduysa devam etme
 
@@ -202,6 +226,28 @@
                 currentPhase = 0; // Döngü başa dönsün
                 strokeCount++; // Her tur tamamlandığında çekiş sayısını artır
                 strokeCountDisplay.textContent = `Çekiş Sayısı: ${strokeCount}`;
+
+                // SPM'yi artır ve zamanlamaları güncelle
+                const targetSpm = parseFloat(spmInput.value);
+                if (currentSpm < targetSpm) {
+                    currentSpm++;
+                    currentSpmDisplay.textContent = `Geçerli SPM: ${currentSpm}`;
+                }
+                updateValues('current'); // SPM değerini güncelle ve fazları yeniden hesapla
+
+                // Faz sürelerini al ve fazları güncelle
+                const catchTime = 500; // Catch süresi sabit 0.5 saniye (500 ms)
+                const driveTime = parseFloat(driveTimeInput.value) * 1000;
+                const finishTime = 500; // Finish süresi sabit 0.5 saniye (500 ms)
+                const recoveryTime = parseFloat(recoveryTimeInput.value) * 1000;
+
+                phases.length = 0; // Eski fazları temizle
+                phases.push(
+                    { name: 'Catch', duration: catchTime, sound: catchSound },
+                    { name: 'Drive', duration: driveTime, sound: driveSound },
+                    { name: 'Finish', duration: finishTime, sound: finishSound },
+                    { name: 'Recovery', duration: recoveryTime, sound: recoverySound }
+                );
             }
 
             const phase = phases[currentPhase];
@@ -266,11 +312,14 @@
             // Başlangıç anından itibaren geçen süreyi sıfırla ve zamanlayıcıyı başlat
             totalElapsedTime = 0;
             strokeCount = 0; // Çekiş sayısını sıfırla
+            currentSpm = 10; // Başlangıç SPM değerini ayarla
+            currentSpmDisplay.textContent = `Geçerli SPM: ${currentSpm}`;
             elapsedTimeDisplay.textContent = "Geçen Süre: 0 saniye";
             strokeCountDisplay.textContent = "Çekiş Sayısı: 0";
             updateElapsedTime();
 
             // Faz sürelerini al ve fazları güncelle
+            updateValues('current'); // Mevcut SPM değerine göre faz sürelerini güncelle
             const catchTime = 500; // Catch süresi sabit 0.5 saniye (500 ms)
             const driveTime = parseFloat(driveTimeInput.value) * 1000;
             const finishTime = 500; // Finish süresi sabit 0.5 saniye (500 ms)
