@@ -22,8 +22,20 @@
             margin-top: 20px;
             cursor: pointer;
         }
-        #phaseDetails {
+        #progressBarContainer {
+            width: 100%;
+            height: 30px;
+            background-color: #f3f3f3;
             margin-top: 20px;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+        #progressBar {
+            height: 100%;
+            width: 0%;
+            position: absolute;
+            border-radius: 15px;
         }
     </style>
 </head>
@@ -44,13 +56,15 @@
         </div>
         <button id="startButton">Başlat</button>
     </div>
-    <div id="phaseDetails"></div>
+    <div id="progressBarContainer">
+        <div id="progressBar"></div>
+    </div>
     <h2 id="status">Durum: Hazır</h2>
 
     <script>
         const startButton = document.getElementById('startButton');
         const status = document.getElementById('status');
-        const phaseDetails = document.getElementById('phaseDetails');
+        const progressBar = document.getElementById('progressBar');
 
         // Ses dosyalarını tanımlıyoruz
         const catchAndFinishSound = new Audio('./sounds/stop.mp3');
@@ -70,15 +84,6 @@
         };
 
         const phases = [];
-
-        const updatePhaseDetails = () => {
-            phaseDetails.innerHTML = ''; // Eski bilgileri temizle
-            phases.forEach((phase, index) => {
-                const phaseElement = document.createElement('p');
-                phaseElement.textContent = `${index + 1}. Faz: ${phase.name} - Süre: ${(phase.duration / 1000).toFixed(2)} saniye`;
-                phaseDetails.appendChild(phaseElement);
-            });
-        };
 
         const updateDriveRecoveryValues = () => {
             const spm = parseFloat(document.getElementById('spm').value);
@@ -103,8 +108,6 @@
                     driveTimeInput.value = (driveTime / 1000).toFixed(2);
                     recoveryTimeInput.value = (recoveryTime / 1000).toFixed(2);
                 }
-
-                updatePhaseDetails(); // Faz sürelerini göster
             }
         };
 
@@ -128,11 +131,32 @@
             }
 
             const phase = phases[currentPhase];
-            status.textContent = `Durum: ${phase.name} (${(phase.duration / 1000).toFixed(2)}s)`;
+            status.textContent = `Durum: ${phase.name}`;
 
             // Fazın sesini başlatmadan önce tüm sesleri durdur
             stopAllSounds();
             phase.sound.play().catch((error) => console.error(`${phase.name} sesi çalınamadı:`, error));
+
+            // Progress bar'ı kontrol et
+            if (phase.name === 'Drive') {
+                progressBar.style.backgroundColor = 'red';
+                progressBar.style.transition = `width ${phase.duration / 1000}s linear`;
+                progressBar.style.width = '0%';
+                setTimeout(() => {
+                    progressBar.style.width = '100%';
+                }, 50);
+            } else if (phase.name === 'Recovery') {
+                progressBar.style.backgroundColor = 'green';
+                progressBar.style.transition = `width ${phase.duration / 1000}s linear`;
+                progressBar.style.width = '100%';
+                setTimeout(() => {
+                    progressBar.style.width = '0%';
+                }, 50);
+            } else {
+                // Catch veya Finish fazında progress bar sabit kalır
+                progressBar.style.width = '0%';
+                progressBar.style.transition = 'none';
+            }
 
             // Mevcut faz tamamlandıktan sonra bir sonraki faza geç
             timeoutId = setTimeout(() => {
@@ -149,6 +173,8 @@
                 isRunning = false;
                 status.textContent = "Durum: Durduruldu";
                 startButton.textContent = "Başlat";
+                progressBar.style.width = '0%';
+                progressBar.style.transition = 'none';
                 return;
             }
 
@@ -162,12 +188,6 @@
             const finishTime = 500; // Finish süresi sabit 0.5 saniye (500 ms)
             const recoveryTime = parseFloat(document.getElementById('recoveryTime').value) * 1000;
 
-            // Negatif veya sıfır süre kontrolü
-            if (driveTime <= 0 || recoveryTime <= 0) {
-                alert("Geçersiz süreler girildi. Lütfen uygun bir SPM değeri ve süre girin.");
-                return;
-            }
-
             phases.length = 0; // Eski fazları temizle
             phases.push(
                 { name: 'Catch', duration: catchTime, sound: catchAndFinishSound },
@@ -175,8 +195,6 @@
                 { name: 'Finish', duration: finishTime, sound: catchAndFinishSound },
                 { name: 'Recovery', duration: recoveryTime, sound: recoverySound }
             );
-
-            updatePhaseDetails(); // Faz sürelerini kullanıcıya göster
 
             status.textContent = 'Durum: Başlıyor...';
             currentPhase = 0; // İlk fazdan başla
