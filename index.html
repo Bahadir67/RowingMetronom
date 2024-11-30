@@ -56,17 +56,11 @@
         <div class="form-group">
             <label>Drive Süresi (saniye):</label>
             <input type="number" step="0.1" id="driveTime" placeholder="SPM girerseniz otomatik hesaplanır">
-            <label>Sabitle:</label>
-            <input type="checkbox" id="driveLock">
-            <label>Sesi Aç:</label>
             <input type="checkbox" id="driveSoundEnable" checked>
         </div>
         <div class="form-group">
             <label>Recovery Süresi (saniye):</label>
             <input type="number" step="0.1" id="recoveryTime" placeholder="SPM girerseniz otomatik hesaplanır">
-            <label>Sabitle:</label>
-            <input type="checkbox" id="recoveryLock">
-            <label>Sesi Aç:</label>
             <input type="checkbox" id="recoverySoundEnable" checked>
         </div>
         <button id="startButton">Başlat</button>
@@ -93,13 +87,12 @@
         const ratioInput = document.getElementById('ratio');
         const driveTimeInput = document.getElementById('driveTime');
         const recoveryTimeInput = document.getElementById('recoveryTime');
-        const driveLockCheckbox = document.getElementById('driveLock');
-        const recoveryLockCheckbox = document.getElementById('recoveryLock');
         const driveSoundEnableCheckbox = document.getElementById('driveSoundEnable');
         const recoverySoundEnableCheckbox = document.getElementById('recoverySoundEnable');
 
         // Ses dosyalarını tanımlıyoruz
-        const catchAndFinishSound = new Audio('./sounds/stop.mp3');
+        const catchSound = new Audio('./sounds/start.mp3'); // Catch fazı için yeni ses dosyası
+        const finishSound = new Audio('./sounds/stop.mp3'); // Finish fazı için önceki ses dosyası
         const driveSound = new Audio('./sounds/drive.mp3');
         const recoverySound = new Audio('./sounds/recovery.mp3');
 
@@ -112,7 +105,7 @@
 
         const stopAllSounds = () => {
             // Tüm sesleri durdur ve başa sar
-            [catchAndFinishSound, driveSound, recoverySound].forEach(sound => {
+            [catchSound, finishSound, driveSound, recoverySound].forEach(sound => {
                 sound.pause();
                 sound.currentTime = 0;
             });
@@ -132,23 +125,10 @@
                 const catchAndFinishTotal = 1000; // Catch ve Finish toplam süresi (1000 ms)
                 const remainingTime = totalStrokeTime - catchAndFinishTotal; // Kalan süre (Drive ve Recovery için)
 
-                if (driveLockCheckbox.checked && !recoveryLockCheckbox.checked) {
-                    // Drive süresi sabit, Recovery yeniden hesaplanacak
-                    const driveTime = parseFloat(driveTimeInput.value) * 1000;
-                    const recoveryTime = remainingTime - driveTime;
-                    recoveryTimeInput.value = (recoveryTime / 1000).toFixed(2);
-                } else if (!driveLockCheckbox.checked && recoveryLockCheckbox.checked) {
-                    // Recovery süresi sabit, Drive yeniden hesaplanacak
-                    const recoveryTime = parseFloat(recoveryTimeInput.value) * 1000;
-                    const driveTime = remainingTime - recoveryTime;
-                    driveTimeInput.value = (driveTime / 1000).toFixed(2);
-                } else if (!driveLockCheckbox.checked && !recoveryLockCheckbox.checked) {
-                    // Her iki süre de sabitlenmemişse, oranlara göre yeniden hesapla
-                    const driveTime = (remainingTime * driveRatio) / totalRatio;
-                    const recoveryTime = (remainingTime * recoveryRatio) / totalRatio;
-                    driveTimeInput.value = (driveTime / 1000).toFixed(2);
-                    recoveryTimeInput.value = (recoveryTime / 1000).toFixed(2);
-                }
+                const driveTime = (remainingTime * driveRatio) / totalRatio;
+                const recoveryTime = (remainingTime * recoveryRatio) / totalRatio;
+                driveTimeInput.value = (driveTime / 1000).toFixed(2);
+                recoveryTimeInput.value = (recoveryTime / 1000).toFixed(2);
             }
         };
 
@@ -162,29 +142,11 @@
         });
 
         driveTimeInput.addEventListener('input', () => {
-            if (!driveLockCheckbox.checked) {
-                updateValues('drive');
-            }
+            updateValues('drive');
         });
 
         recoveryTimeInput.addEventListener('input', () => {
-            if (!recoveryLockCheckbox.checked) {
-                updateValues('recovery');
-            }
-        });
-
-        driveLockCheckbox.addEventListener('change', () => {
-            if (driveLockCheckbox.checked) {
-                recoveryLockCheckbox.checked = false; // Drive sabitlendiğinde Recovery sabitlenmesin
-            }
-            updateValues('lock');
-        });
-
-        recoveryLockCheckbox.addEventListener('change', () => {
-            if (recoveryLockCheckbox.checked) {
-                driveLockCheckbox.checked = false; // Recovery sabitlendiğinde Drive sabitlenmesin
-            }
-            updateValues('lock');
+            updateValues('recovery');
         });
 
         // Sayfa yüklendiğinde başlangıç değerlerini hesapla
@@ -217,13 +179,15 @@
             // Fazın sesini başlatmadan önce tüm sesleri durdur
             stopAllSounds();
 
-            // Drive veya Recovery sesleri checkbox durumuna göre oynatılır
+            // Fazın adına göre ilgili sesi oynat
             if (phase.name === 'Drive' && driveSoundEnableCheckbox.checked) {
                 driveSound.play().catch((error) => console.error(`${phase.name} sesi çalınamadı:`, error));
             } else if (phase.name === 'Recovery' && recoverySoundEnableCheckbox.checked) {
                 recoverySound.play().catch((error) => console.error(`${phase.name} sesi çalınamadı:`, error));
-            } else if (phase.name === 'Catch' || phase.name === 'Finish') {
-                catchAndFinishSound.play().catch((error) => console.error(`${phase.name} sesi çalınamadı:`, error));
+            } else if (phase.name === 'Catch') {
+                catchSound.play().catch((error) => console.error(`${phase.name} sesi çalınamadı:`, error));
+            } else if (phase.name === 'Finish') {
+                finishSound.play().catch((error) => console.error(`${phase.name} sesi çalınamadı:`, error));
             }
 
             // Progress bar'ı kontrol et
@@ -283,9 +247,9 @@
 
             phases.length = 0; // Eski fazları temizle
             phases.push(
-                { name: 'Catch', duration: catchTime, sound: catchAndFinishSound },
+                { name: 'Catch', duration: catchTime, sound: catchSound },
                 { name: 'Drive', duration: driveTime, sound: driveSound },
-                { name: 'Finish', duration: finishTime, sound: catchAndFinishSound },
+                { name: 'Finish', duration: finishTime, sound: finishSound },
                 { name: 'Recovery', duration: recoveryTime, sound: recoverySound }
             );
 
