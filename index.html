@@ -24,11 +24,16 @@
         input[type="number"],
         input[type="text"] {
             padding: 15px;
-            font-size: 1.6em; /* Girdi alanlarının yazı boyutu büyütüldü */
+            font-size: 2.4em; /* Girdi alanlarının yazı boyutu %50 büyütüldü */
             font-weight: bold; /* Yazı tipi kalın yapıldı */
             width: 85%;
             max-width: 500px;
             margin: 0 auto;
+        }
+        input[type="checkbox"] {
+            width: 30px; /* Checkbox genişliği büyütüldü */
+            height: 30px; /* Checkbox yüksekliği büyütüldü */
+            margin-left: 10px;
         }
         button {
             padding: 20px 40px;
@@ -63,7 +68,7 @@
     <h1>Rowing Metronome</h1>
     <div id="settings">
         <div class="form-group">
-            <label for="spm">SPM (Stroke Per Minute - Dakikadaki Çekiş):</label>
+            <label for="spm">SPM (Stroke Per Minute):</label>
             <input type="number" step="0.1" id="spm" placeholder="Dakikadaki Çekiş Sayısı" value="21">
         </div>
         <div class="form-group">
