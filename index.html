@@ -37,11 +37,7 @@
             position: absolute;
             border-radius: 15px;
         }
-        #timer {
-            font-size: 1.5em;
-            margin-top: 20px;
-        }
-        #strokeCount {
+        #timerAndStroke {
             font-size: 1.5em;
             margin-top: 20px;
         }
@@ -213,10 +209,4 @@
             phases.push(
                 { name: 'Catch', duration: catchTime, sound: catchAndFinishSound },
                 { name: 'Drive', duration: driveTime, sound: driveSound },
-                { name: 'Finish', duration: finishTime, sound: catchAndFinishSound },
-                { name: 'Recovery', duration: recoveryTime, sound: recoverySound }
-            );
-
-            status.textContent = 'Durum: Başlıyor...';
-            currentPhase = 0; // İlk fazdan başla
-           
+                { name: 'Finish', duration: finishTime, sound
