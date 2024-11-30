@@ -236,6 +236,10 @@
                 currentSpmDisplay.textContent = `Geçerli SPM: ${currentSpm}`;
                 if (currentSpm >= targetSpm) {
                     currentSpmDisplay.style.display = 'none';
+                    totalElapsedTime = 0;
+                    strokeCount = 0;
+                    elapsedTimeDisplay.textContent = "Geçen Süre: 0 saniye";
+                    strokeCountDisplay.textContent = "Çekiş Sayısı: 0";
                 }
                 }
                 updateValues('current'); // SPM değerini güncelle ve fazları yeniden hesapla
