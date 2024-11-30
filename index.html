@@ -91,7 +91,6 @@
         let timeoutId = null; // Faz zamanlayıcısını tutar
         let intervalId = null; // Zamanlayıcıyı güncellemek için
         let strokeCount = 0; // Toplam çekiş sayısını tutar
-        let lastStrokeTime = 0; // En son stroke süresini tutar
         let totalElapsedTime = 0; // Başlangıçtan itibaren geçen süre
 
         const stopAllSounds = () => {
@@ -134,7 +133,103 @@
             updateDriveRecoveryValues();
         });
 
-        // (Kodun geri kalanı aynı kalıyor)
+        const updateElapsedTime = () => {
+            clearInterval(intervalId);
+            intervalId = setInterval(() => {
+                if (isRunning) {
+                    totalElapsedTime += 0.1;
+                    elapsedTimeDisplay.textContent = `Geçen Süre: ${totalElapsedTime.toFixed(1)} saniye`;
+                }
+            }, 100);
+        };
+
+        const playPhase = () => {
+            if (!isRunning) return; // Çalışma durdurulduysa devam etme
+
+            if (currentPhase >= phases.length) {
+                currentPhase = 0; // Döngü başa dönsün
+                strokeCount++; // Her tur tamamlandığında çekiş sayısını artır
+                strokeCountDisplay.textContent = `Çekiş Sayısı: ${strokeCount}`;
+            }
+
+            const phase = phases[currentPhase];
+            status.textContent = `Durum: ${phase.name}`;
+
+            // Fazın sesini başlatmadan önce tüm sesleri durdur
+            stopAllSounds();
+            phase.sound.play().catch((error) => console.error(`${phase.name} sesi çalınamadı:`, error));
+
+            // En son stroke süresini güncelle (Catch + Drive + Finish + Recovery)
+            if (phase.name === 'Catch') {
+                const totalStrokeTime = phases.reduce((total, p) => total + p.duration, 0);
+                lastStrokeTimeDisplay.textContent = `Son Stroke Süresi: ${(totalStrokeTime / 1000).toFixed(1)} saniye`;
+            }
+
+            // Progress bar'ı kontrol et
+            if (phase.name === 'Drive') {
+                progressBar.style.backgroundColor = 'red';
+                progressBar.style.transition = `width ${phase.duration / 1000}s linear`;
+                progressBar.style.width = '0%';
+                setTimeout(() => {
+                    progressBar.style.width = '100%';
+                }, 50);
+            } else if (phase.name === 'Recovery') {
+                progressBar.style.backgroundColor = 'green';
+                progressBar.style.transition = `width ${phase.duration / 1000}s linear`;
+                progressBar.style.width = '100%';
+                setTimeout(() => {
+                    progressBar.style.width = '0%';
+                }, 50);
+            }
+
+            // Mevcut faz tamamlandıktan sonra bir sonraki faza geç
+            timeoutId = setTimeout(() => {
+                currentPhase++;
+                playPhase();
+            }, phase.duration);
+        };
+
+        startButton.addEventListener('click', () => {
+            if (isRunning) {
+                // Metronomu durdur
+                clearTimeout(timeoutId);
+                clearInterval(intervalId);
+                stopAllSounds();
+                isRunning = false;
+                status.textContent = "Durum: Durduruldu";
+                startButton.textContent = "Başlat";
+                progressBar.style.width = '0%';
+                progressBar.style.transition = 'none';
+                return;
+            }
+
+            // Metronomu başlat
+            isRunning = true;
+            startButton.textContent = "Durdur";
+
+            // Başlangıç anından itibaren geçen süreyi sıfırla ve zamanlayıcıyı başlat
+            totalElapsedTime = 0;
+            elapsedTimeDisplay.textContent = "Geçen Süre: 0 saniye";
+            updateElapsedTime();
+
+            // Faz sürelerini al ve fazları güncelle
+            const catchTime = 500; // Catch süresi sabit 0.5 saniye (500 ms)
+            const driveTime = parseFloat(document.getElementById('driveTime').value) * 1000;
+            const finishTime = 500; // Finish süresi sabit 0.5 saniye (500 ms)
+            const recoveryTime = parseFloat(document.getElementById('recoveryTime').value) * 1000;
+
+            phases.length = 0; // Eski fazları temizle
+            phases.push(
+                { name: 'Catch', duration: catchTime, sound: catchAndFinishSound },
+                { name: 'Drive', duration: driveTime, sound: driveSound },
+                { name: 'Finish', duration: finishTime, sound: catchAndFinishSound },
+                { name: 'Recovery', duration: recoveryTime, sound: recoverySound }
+            );
+
+            status.textContent = 'Durum: Başlıyor...';
+            currentPhase = 0; // İlk fazdan başla
+            playPhase();
+        });
     </script>
 </body>
 </html>
