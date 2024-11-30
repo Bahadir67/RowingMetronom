@@ -153,11 +153,11 @@
             } else if (phase.name === 'Recovery') {
                 progressBar.style.backgroundColor = 'green';
                 progressBar.style.transition = `width ${phase.duration / 1000}s linear`;
-                progressBar.style.width = '0%';
+                progressBar.style.width = '100%';
                 setTimeout(() => {
-                    progressBar.style.width = '100%';
+                    progressBar.style.width = '0%';
                 }, 50);
-            }
+            }            
             // Mevcut faz tamamlandıktan sonra bir sonraki faza geç
             timeoutId = setTimeout(() => {
                 currentPhase++;
