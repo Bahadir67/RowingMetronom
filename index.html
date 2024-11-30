@@ -156,6 +156,9 @@
         const updateValues = (trigger) => {
             let spm = currentSpm;
             if (trigger === 'spm') {
+                spm = parseFloat(spmInput.value);
+                currentSpm = 10; // Başlangıç SPM değeri 10
+            } else if (trigger === 'current') {
                 spm = currentSpm;
             }
             const ratio = ratioInput.value.split(':').map(Number);
@@ -230,7 +233,7 @@
                     currentSpm++;
                     currentSpmDisplay.textContent = `Geçerli SPM: ${currentSpm}`;
                 }
-                updateValues('spm'); // SPM değerini güncelle ve fazları yeniden hesapla
+                updateValues('current'); // SPM değerini güncelle ve fazları yeniden hesapla
 
                 // Faz sürelerini al ve fazları güncelle
                 const catchTime = 500; // Catch süresi sabit 0.5 saniye (500 ms)
@@ -275,6 +278,18 @@
             } else if (phase.name === 'Recovery') {
                 progressBar.style.backgroundColor = 'green';
                 progressBar.style.transition = `width ${phase.duration / 1000}s linear`;
+                progressBar.style.width = '100%';
+                setTimeout(() => {
+                    progressBar.style.width = '0%';
+                }, 50);
+            }
+
+            // Mevcut faz tamamlandıktan sonra bir sonraki faza geç
+            timeoutId = setTimeout(() => {
+                currentPhase++;
+                playPhase();
+            }, phase.duration);
+        };
 
         startButton.addEventListener('click', () => {
             if (isRunning) {
@@ -288,6 +303,39 @@
                 progressBar.style.width = '0%';
                 progressBar.style.transition = 'none';
                 return;
+            }
+
+            // Metronomu başlat
+            isRunning = true;
+            startButton.textContent = "Durdur";
+
+            // Başlangıç anından itibaren geçen süreyi sıfırla ve zamanlayıcıyı başlat
+            totalElapsedTime = 0;
+            strokeCount = 0; // Çekiş sayısını sıfırla
+            currentSpm = 10; // Başlangıç SPM değerini ayarla
+            currentSpmDisplay.textContent = `Geçerli SPM: ${currentSpm}`;
+            elapsedTimeDisplay.textContent = "Geçen Süre: 0 saniye";
+            strokeCountDisplay.textContent = "Çekiş Sayısı: 0";
+            updateElapsedTime();
+
+            // Faz sürelerini al ve fazları güncelle
+            updateValues('current'); // Mevcut SPM değerine göre faz sürelerini güncelle
+            const catchTime = 500; // Catch süresi sabit 0.5 saniye (500 ms)
+            const driveTime = parseFloat(driveTimeInput.value) * 1000;
+            const finishTime = 500; // Finish süresi sabit 0.5 saniye (500 ms)
+            const recoveryTime = parseFloat(recoveryTimeInput.value) * 1000;
+
+            phases.length = 0; // Eski fazları temizle
+            phases.push(
+                { name: 'Catch', duration: catchTime, sound: catchSound },
+                { name: 'Drive', duration: driveTime, sound: driveSound },
+                { name: 'Finish', duration: finishTime, sound: finishSound },
+                { name: 'Recovery', duration: recoveryTime, sound: recoverySound }
+            );
+
+            status.textContent = 'Durum: Başlıyor...';
+            currentPhase = 0; // İlk fazdan başla
+            playPhase();
             }
 
             // Metronomu başlat
