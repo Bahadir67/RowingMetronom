@@ -20,7 +20,32 @@
         .form-group {
             margin: 20px;
         }
-        label {$1color: #000000; /* Buton rengini mavi yaptım */
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 1.4em; /* Tüm label'ların font boyutunu aynı yap */
+        }
+        input[type="number"],
+        input[type="text"] {
+            padding: 15px;
+            font-size: 2.4em; /* Girdi alanlarının yazı boyutu %50 büyütüldü */
+            font-weight: bold; /* Yazı tipi kalın yapıldı */
+            width: 85%;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        input[type="checkbox"] {
+            width: 30px; /* Checkbox genişliği büyütüldü */
+            height: 30px; /* Checkbox yüksekliği büyütüldü */
+            margin-left: 10px;
+        }
+        button {
+            padding: 30px 60px; /* Buton boyutu %50 büyütüldü */
+            font-size: 2.4em; /* Buton yazı boyutu büyütüldü */
+            font-weight: bold; /* Buton yazı tipi kalın yapıldı */
+            margin-top: 25px;
+            cursor: pointer;
+            background-color: #007bff; /* Buton rengini mavi yaptım */
             color: #ffffff; /* Buton yazı rengini beyaz yaptım */
             border: none;
             border-radius: 10px; /* Butona yuvarlak kenar verdim */
