@@ -48,7 +48,7 @@
     <div id="settings">
         <div class="form-group">
             <label>SPM (Stroke Per Minute - Dakikadaki Çekiş):</label>
-            <input type="number" step="0.1" id="spm" placeholder="Dakikadaki Çekiş Sayısı" value="21">
+            <input type="number" step="0.1" id="spm" placeholder="Dakikadaki Çekiş Sayısı" value="20">
         </div>
         <div class="form-group">
             <label>Drive Süresi (saniye):</label>
@@ -209,4 +209,14 @@
             phases.push(
                 { name: 'Catch', duration: catchTime, sound: catchAndFinishSound },
                 { name: 'Drive', duration: driveTime, sound: driveSound },
-                { name: 'Finish', duration: finishTime, sound
+                { name: 'Finish', duration: finishTime, sound: catchAndFinishSound },
+                { name: 'Recovery', duration: recoveryTime, sound: recoverySound }
+            );
+
+            status.textContent = 'Durum: Başlıyor...';
+            currentPhase = 0; // İlk fazdan başla
+            playPhase();
+        });
+    </script>
+</body>
+</html>
