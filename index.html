@@ -111,7 +111,7 @@
         <span id="strokeCount">Çekiş Sayısı: 0</span>
     </div>
     <h2 id="status">Durum: Hazır</h2>
-    <div id="currentSpm">Geçerli SPM: 10</div>
+    <div id="currentSpm">Geçerli SPM: 1x</div>
 
     <script>
         const startButton = document.getElementById('startButton');
@@ -229,8 +229,22 @@
                 if (currentSpm < targetSpm) {
                     currentSpm++;
                     currentSpmDisplay.textContent = `Geçerli SPM: ${currentSpm}`;
-                    updateValues('spm');
                 }
+                updateValues('spm'); // SPM değerini güncelle ve fazları yeniden hesapla
+
+                // Faz sürelerini al ve fazları güncelle
+                const catchTime = 500; // Catch süresi sabit 0.5 saniye (500 ms)
+                const driveTime = parseFloat(driveTimeInput.value) * 1000;
+                const finishTime = 500; // Finish süresi sabit 0.5 saniye (500 ms)
+                const recoveryTime = parseFloat(recoveryTimeInput.value) * 1000;
+
+                phases.length = 0; // Eski fazları temizle
+                phases.push(
+                    { name: 'Catch', duration: catchTime, sound: catchSound },
+                    { name: 'Drive', duration: driveTime, sound: driveSound },
+                    { name: 'Finish', duration: finishTime, sound: finishSound },
+                    { name: 'Recovery', duration: recoveryTime, sound: recoverySound }
+                );
             }
 
             const phase = phases[currentPhase];
@@ -261,18 +275,6 @@
             } else if (phase.name === 'Recovery') {
                 progressBar.style.backgroundColor = 'green';
                 progressBar.style.transition = `width ${phase.duration / 1000}s linear`;
-                progressBar.style.width = '100%';
-                setTimeout(() => {
-                    progressBar.style.width = '0%';
-                }, 50);
-            }
-
-            // Mevcut faz tamamlandıktan sonra bir sonraki faza geç
-            timeoutId = setTimeout(() => {
-                currentPhase++;
-                playPhase();
-            }, phase.duration);
-        };
 
         startButton.addEventListener('click', () => {
             if (isRunning) {
